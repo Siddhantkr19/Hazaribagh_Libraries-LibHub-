@@ -2,10 +2,11 @@ package com.HazaribaghLibraries.repository;
 
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.entity.User;
+import jdk.jfr.Registered;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-
+@Registered
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     // You can add custom query methods here if needed
     // THE DISCOUNT LOGIC:
