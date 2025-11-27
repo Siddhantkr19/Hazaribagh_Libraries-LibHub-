@@ -35,7 +35,7 @@ public class Library {
     private String openingHours;
 
     @Column(nullable = false)
-    private  Integer totalSeat ;   // eg : 60
+    private  Integer totalSeats ;   // eg : 60
 
     @Column(nullable = false)
     private String contactNumber ;
