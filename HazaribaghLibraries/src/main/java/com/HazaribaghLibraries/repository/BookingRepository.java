@@ -1,11 +1,14 @@
 package com.HazaribaghLibraries.repository;
 
 import com.HazaribaghLibraries.entity.Booking;
+import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.entity.User;
 import jdk.jfr.Registered;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Registered
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     // You can add custom query methods here if needed
@@ -20,4 +23,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // OPTIONAL: Find only active bookings (Where status is CONFIRMED)
     List<Booking> findByUserAndStatus(User user, Booking.BookingStatus status);
+
+    // Find the if the   user  already book specific library
+    Optional<Booking> findTopByUserAndLibraryAndStatusOrderByValidUntilDesc(
+            User user,
+            Library library,
+            Booking.BookingStatus status
+    );
 }
