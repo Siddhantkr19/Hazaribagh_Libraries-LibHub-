@@ -31,7 +31,6 @@ public class Booking {
     private String seatNumber; // e.g., "B4" or "Ground-12" or 21 seat number
 
     private LocalDateTime bookingDate; // Timestamp of when they clicked "Pay"
-
     private LocalDateTime validUntil; // Expiry Date (30 days later)
 
     private Double amountPaid; // e.g., 350.0
