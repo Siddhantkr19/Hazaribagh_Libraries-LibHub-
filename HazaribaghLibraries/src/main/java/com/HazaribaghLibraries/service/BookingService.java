@@ -2,13 +2,18 @@ package com.HazaribaghLibraries.service;
 
 
 import com.HazaribaghLibraries.dto.DashboardBookingDTO;
+import com.HazaribaghLibraries.dto.PaymentHistoryDTO;
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.entity.Library;
+import com.HazaribaghLibraries.entity.PaymentHistory;
 import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.LibraryRepository;
+import com.HazaribaghLibraries.repository.PaymentHistoryRepository;
 import com.HazaribaghLibraries.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.aspectj.asm.IModelFilter;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,17 +23,20 @@ import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
-
+    private final PaymentHistoryRepository paymentHistoryRepository;
     private final BookingRepository bookingRepository;
     private final LibraryRepository libraryRepository;
     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
-    public BookingService(BookingRepository bookingRepository,
+    public BookingService(PaymentHistoryRepository paymentHistoryRepository, BookingRepository bookingRepository,
                           LibraryRepository libraryRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository, ModelMapper modelMapper) {
+        this.paymentHistoryRepository = paymentHistoryRepository;
         this.bookingRepository = bookingRepository;
         this.libraryRepository = libraryRepository;
         this.userRepository = userRepository;
+        this.modelMapper = modelMapper;
     }
 
     // 1 THE TRANSACTION LOGIC
@@ -50,22 +58,42 @@ public class BookingService {
         boolean isOldCustomer = bookingRepository.existsByUser(user);
         Double finalPrice = isOldCustomer ? library.getOriginalPrice() : library.getOfferPrice();
 
-        // D. Create the Booking Object
-        Booking booking = new Booking();
-        booking.setUser(user);
-        booking.setLibrary(library);
-        booking.setBookingDate(LocalDateTime.now());
-       // booking.setStartTime(LocalDateTime.now());
-        booking.setValidUntil(LocalDateTime.now().plusDays(30)); // 30 Days Validity
-        booking.setAmountPaid(finalPrice);
-        booking.setPaymentId(paymentId);
-        booking.setStatus(Booking.BookingStatus.CONFIRMED);
+        // 1. SAVE THE RECEIPT (PAYMENT HISTORY) - NEW STEP!
+        PaymentHistory receipt = new PaymentHistory();
+        receipt.setUser(user);
+        receipt.setLibrary(library);
+        receipt.setAmount(finalPrice);
+        receipt.setPaymentId(paymentId);
+        receipt.setPaymentDate(LocalDateTime.now());
+        receipt.setStatus("SUCCESS");
+        paymentHistoryRepository.save(receipt);  // payment done then ok other wise rollback no dont take overstress to  understand the code
 
-        // E. Assign a Seat Number (Optional/Random for now)
-        // Real logic would find the first empty seat. Here we just give a placeholder.
-        booking.setSeatNumber("Auto-" + (System.currentTimeMillis() % 1000));
+        // 2. UPDATE OR CREATE BOOKING (Your Previous Logic)
+        var existingBookingOpt = bookingRepository.findTopByUserAndLibraryAndStatusOrderByValidUntilDesc(
+                user, library, Booking.BookingStatus.CONFIRMED);
 
-        return bookingRepository.save(booking);
+        Booking bookingToSave;
+                                                 // cheaking  user subsription expire or not
+        if (existingBookingOpt.isPresent() && existingBookingOpt.get().getValidUntil().isAfter(LocalDateTime.now())) {
+            // Extend Existing
+            bookingToSave = existingBookingOpt.get();
+            bookingToSave.setValidUntil(bookingToSave.getValidUntil().plusDays(28));
+        } else {
+            // Create New
+            bookingToSave = new Booking();
+            bookingToSave.setUser(user);
+            bookingToSave.setLibrary(library);
+            bookingToSave.setBookingDate(LocalDateTime.now());
+            bookingToSave.setValidUntil(LocalDateTime.now().plusDays(28));
+            bookingToSave.setSeatNumber("Auto-" + (System.currentTimeMillis() % 1000));
+        }
+
+        // Common Updates
+        bookingToSave.setAmountPaid(finalPrice);
+        bookingToSave.setPaymentId(paymentId);
+        bookingToSave.setStatus(Booking.BookingStatus.CONFIRMED);
+
+        return bookingRepository.save(bookingToSave);
     }
 
 
@@ -102,5 +130,25 @@ public class BookingService {
 
         ).collect(Collectors.toList());
     }
+
+    // 3. GET HISTORY METHOD
+    public List<PaymentHistoryDTO> getPaymentHistory(String userEmail, Long libraryId) {
+
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Library library = libraryRepository.findById(libraryId).orElseThrow(() -> new RuntimeException("Library not found"));
+
+        // 1. Fetch all Entities
+        List<PaymentHistory> historyList = paymentHistoryRepository
+                .findByUserAndLibraryOrderByPaymentDateDesc(user, library);
+
+        // 2. Convert to DTOs by model mapper
+        return historyList.stream().map(history ->   {
+                    PaymentHistoryDTO dto = modelMapper.map(history, PaymentHistoryDTO.class);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
 
 }
