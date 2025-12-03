@@ -1,13 +1,10 @@
 package com.HazaribaghLibraries.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.annotation.Nullable;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.management.relation.Role;
 
 @Entity
 @Data
@@ -37,8 +34,8 @@ public class User {
     private Role role ;
 
     public enum Role{
-          Student,
-         Admin
+        Student,
+        Admin
     }
 
 }
