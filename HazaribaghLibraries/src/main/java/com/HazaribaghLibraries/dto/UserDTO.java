@@ -14,6 +14,6 @@ public class UserDTO {
     private String password;
 
     private String phoneNumber;
-    private String profilePictureUrl;
+    private String profilePicture;
     private User.Role role; // STUDENT or ADMIN
 }
