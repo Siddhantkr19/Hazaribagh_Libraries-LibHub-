@@ -6,8 +6,13 @@ import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+
+import java.io.IOException;
+
 @RequestMapping("/api/auth") // Common standard for login/register APIs
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 public class UserController {
     private final UserService userService;
@@ -27,6 +32,30 @@ public class UserController {
 public  ResponseEntity<UserDTO> getUserProfile(@RequestParam String userEmail){
     return ResponseEntity.ok(userService.getUserProfile(userEmail));
 }
+    // URL: PUT http://localhost:8080/api/auth/upload-photo
+    // Body: Form-Data (Key: "file" -> Select Image, Key: "userEmail" -> "rahul@gmail.com")
+    @PutMapping("/upload-photo")
+    public ResponseEntity<?> uploadProfilePhoto(
+            @RequestParam("userEmail") String userEmail,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            // Check if file is empty
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Please select a file");
+            }
 
+            // Check file type (Allow only images)
+            String contentType = file.getContentType();
+            if(contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Only Image files (JPG, PNG) are allowed");
+            }
+
+            return ResponseEntity.ok(userService.uploadProfilePicture(userEmail, file));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Error uploading file: " + e.getMessage());
+        }
+    }
 
 }
