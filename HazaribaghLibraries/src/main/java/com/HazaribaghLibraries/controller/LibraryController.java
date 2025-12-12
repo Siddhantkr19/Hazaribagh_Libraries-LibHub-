@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 
 @RequestMapping("/api/libraries") // All URLs start with this
-@CrossOrigin(origins = "http://localhost:3000") // Allows React to talk to Java
+@CrossOrigin(origins = "http://localhost:5173") // Allows React to talk to Java
 public class LibraryController {
 
     private final LibraryService libraryService;
