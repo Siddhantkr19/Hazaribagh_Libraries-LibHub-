@@ -24,7 +24,7 @@ public class UserService {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
     }
-  // register new user
+  // register new user  && SignUp New User
     public UserDTO registerUser(User user){
          if(userRepository.findByEmail(user.getEmail()).isPresent()){
              throw new RuntimeException("Email already exists!");
@@ -37,11 +37,15 @@ public class UserService {
           return modelMapper.map(userRepository.save(user), UserDTO.class);
 
     }
-
+   //  cheak login
     public  UserDTO getUserProfile(String userEmail){
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
     return modelMapper.map(user, UserDTO.class);
     }
+
+
+
+    // Upload Profile Picture
 
     public UserDTO uploadProfilePicture(String userEmail, MultipartFile file) throws IOException {
         User user = userRepository.findByEmail(userEmail)
