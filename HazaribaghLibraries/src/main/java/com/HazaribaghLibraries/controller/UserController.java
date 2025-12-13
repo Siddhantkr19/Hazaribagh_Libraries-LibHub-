@@ -22,11 +22,14 @@ public class UserController {
     }
     // URL: POST http://localhost:8080/api/auth/register
 
-    @PostMapping("/register")
+    // this not working
+    @PostMapping("/registers")
      public ResponseEntity<UserDTO> registerUser(@RequestBody User user){
         return ResponseEntity.ok(userService.registerUser(user));
 
     }
+
+    // cheak login
     // URL: GET http://localhost:8080/api/auth/profile?userEmail=rahul@gmail.com
     @GetMapping("/profile")
 public  ResponseEntity<UserDTO> getUserProfile(@RequestParam String userEmail){
