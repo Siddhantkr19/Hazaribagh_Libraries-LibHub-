@@ -1,54 +1,68 @@
 package com.HazaribaghLibraries.service;
 
 import com.HazaribaghLibraries.dto.LoginRequestDTO;
+import com.HazaribaghLibraries.dto.SignupRequestDTO;
 import com.HazaribaghLibraries.dto.UserDTO;
 import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.repository.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.HazaribaghLibraries.dto.SignupRequestDTO;
+
 @Service
-
 public class AuthService {
-     private  final ModelMapper modelMapper;
-     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
-    public AuthService(ModelMapper modelMapper, UserRepository userRepository) {
+    // [NEW] Inject these beans
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthService(ModelMapper modelMapper, UserRepository userRepository,
+                       PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.modelMapper = modelMapper;
         this.userRepository = userRepository;
-    }
-     public UserDTO login(LoginRequestDTO loginRequestDTO) {
-        User user = userRepository.findByEmail(loginRequestDTO.getEmail()).orElseThrow(() -> new RuntimeException("User not found"));
-
-         if(!user.getPassword().equals(loginRequestDTO.getPassword())){
-             throw new RuntimeException("Invalid Password");
-
-         }
-        return modelMapper.map(user , UserDTO.class);
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
+    // [CHANGED] Login now performs authentication via Manager
+    // Returns Entity (to get data) but Authentication is handled separately in Controller
+    public UserDTO login(LoginRequestDTO loginRequestDTO) {
+        // 1. Authenticate using Spring Security (This checks email & password automatically)
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequestDTO.getEmail(), loginRequestDTO.getPassword()));
 
+        // 2. Set Context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    // --- REGISTER (NEW CODE) ---
+        // 3. Get User Details to return to Frontend
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return modelMapper.map(user, UserDTO.class);
+    }
+
+    // [CHANGED] Register now encodes password
     public UserDTO registerUser(SignupRequestDTO signupRequest) {
-        // 1. Check if email exists
-        if(userRepository.findByEmail(signupRequest.getEmail()).isPresent()){
+        if (userRepository.findByEmail(signupRequest.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists!");
         }
 
-        // 2. Convert DTO to Entity manually or using Mapper
         User user = modelMapper.map(signupRequest, User.class);
 
-        // 3. Set Default Role if missing
-        if(user.getRole() == null){
+        // [NEW] Encode Password before saving!
+        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+
+        if (user.getRole() == null) {
             user.setRole(User.Role.Student);
         }
 
-        // 4. Save to Database
         User savedUser = userRepository.save(user);
-
-        // 5. Return the clean UserDTO (no password)
         return modelMapper.map(savedUser, UserDTO.class);
     }
-
 }
