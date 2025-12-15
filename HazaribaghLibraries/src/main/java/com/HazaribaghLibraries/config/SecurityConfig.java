@@ -2,6 +2,7 @@ package com.HazaribaghLibraries.config;
 
 import com.HazaribaghLibraries.security.jwt.AuthTokenFilter;
 import com.HazaribaghLibraries.security.services.UserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.HazaribaghLibraries.security.oauth2.OAuth2LoginSuccessHandler;
 
 import java.util.List;
 
@@ -25,18 +27,19 @@ public class SecurityConfig {
 
     // [NEW] Inject UserDetailsServiceImpl
     private final UserDetailsServiceImpl userDetailsService;
-
+    @Autowired
+    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
-    // [NEW] Define the JWT Filter Bean
+
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
     }
 
-    // [NEW] Define the AuthenticationProvider (uses UserDetails + BCrypt)
+    // Define the AuthenticationProvider (uses UserDetails + BCrypt)
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -51,7 +54,7 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    // [NEW] Password Encoder (BCrypt)
+    // Password Encoder (BCrypt)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -68,16 +71,22 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll() // Login/Register open
+                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
+                        .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers("/api/libraries/**").permitAll() // Viewing libraries open
                         .requestMatchers("/uploads/**").permitAll()
                         .anyRequest().authenticated() // Everything else requires login
-                );
+                )
 
-        // [NEW] Add the Auth Provider
+        .oauth2Login(oauth2 -> oauth2
+                // When the user is successful, run our "Token Swap" logic
+                .successHandler(oAuth2LoginSuccessHandler)
+        );
+
+        // Add the Auth Provider
         http.authenticationProvider(authenticationProvider());
 
-        // [NEW] Add JWT Filter BEFORE the standard UsernamePasswordAuthenticationFilter
+        //  Add JWT Filter BEFORE the standard UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -88,7 +97,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
         configuration.setAllowCredentials(true); // Must be true for Cookies!
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
