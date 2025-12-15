@@ -52,7 +52,7 @@ public class JwtUtils {
 
     // 3. Clean Cookie (Logout)
     public ResponseCookie getCleanJwtCookie() {
-        return ResponseCookie.from(jwtCookie, null).path("/api").build();
+        return ResponseCookie.from(jwtCookie, null).path("/").build();
     }
 
     // 4. Extract Email from JWT
