@@ -26,17 +26,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            // 1. Parse JWT from cookie
+            // [DEBUG] Print Cookies to Console
+            if (request.getCookies() != null) {
+                for (jakarta.servlet.http.Cookie c : request.getCookies()) {
+                     System.out.println("Backend received cookie: " + c.getName());
+                }
+            }
+
             String jwt = jwtUtils.getJwtFromCookies(request);
 
-            // 2. Validate JWT
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+            if (jwt != null && !jwt.isEmpty() && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
-
-                // 3. Load User Details from DB
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                // 4. Set Authentication in Spring Context (Logs the user in for this request)
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
