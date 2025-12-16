@@ -3,6 +3,7 @@ package com.HazaribaghLibraries.service;
 
 import com.HazaribaghLibraries.dto.DashboardBookingDTO;
 import com.HazaribaghLibraries.dto.PaymentHistoryDTO;
+import com.HazaribaghLibraries.dto.PaymentVerificationDTO;
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.entity.PaymentHistory;
@@ -11,9 +12,16 @@ import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.LibraryRepository;
 import com.HazaribaghLibraries.repository.PaymentHistoryRepository;
 import com.HazaribaghLibraries.repository.UserRepository;
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
+import com.razorpay.Utils;
+import org.json.JSONObject;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.aspectj.asm.IModelFilter;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,6 +36,13 @@ public class BookingService {
     private final LibraryRepository libraryRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
+    @Value("${razorpay.key.id}")
+    private String razorpayKeyId;
+
+    @Value("${razorpay.key.secret}")
+    private String razorpayKeySecret;
+
+    private RazorpayClient razorpayClient;
 
     public BookingService(PaymentHistoryRepository paymentHistoryRepository, BookingRepository bookingRepository,
                           LibraryRepository libraryRepository,
@@ -38,64 +53,109 @@ public class BookingService {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
     }
-
-    // 1 THE TRANSACTION LOGIC
-    @Transactional // Ensures if anything fails, the database rolls back
-    public Booking createBooking(String userEmail, Long libraryId, String paymentId) {
-
-        // A. Find User & Library
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
-
-        Library library = libraryRepository.findById(libraryId).orElseThrow(() -> new RuntimeException("Library not found"));
-
-        // B. Check Seat Availability (House Full Logic)
-        // We count how many CONFIRMED bookings exist for this library
-        // (Note: You might need to add countByLibraryAndStatus to your Repository, see note below)
-        // For now, assuming simple logic:
-        // if (currentBookings >= library.getTotalSeats()) throw new RuntimeException("Library is Full!");
-
-        // C. Calculate Price (The ₹350 vs ₹400 Logic)
-        boolean isOldCustomer = bookingRepository.existsByUser(user);
-        Double finalPrice = isOldCustomer ? library.getOriginalPrice() : library.getOfferPrice();
-
-        // 1. SAVE THE RECEIPT (PAYMENT HISTORY) - NEW STEP!
-        PaymentHistory receipt = new PaymentHistory();
-        receipt.setUser(user);
-        receipt.setLibrary(library);
-        receipt.setAmount(finalPrice);
-        receipt.setPaymentId(paymentId);
-        receipt.setPaymentDate(LocalDateTime.now());
-        receipt.setStatus("SUCCESS");
-        paymentHistoryRepository.save(receipt);  // payment done then ok other wise rollback no dont take overstress to  understand the code
-
-        // 2. UPDATE OR CREATE BOOKING (Your Previous Logic)
-        var existingBookingOpt = bookingRepository.findTopByUserAndLibraryAndStatusOrderByValidUntilDesc(
-                user, library, Booking.BookingStatus.CONFIRMED);
-
-        Booking bookingToSave;
-                                                 // cheaking  user subsription expire or not
-        if (existingBookingOpt.isPresent() && existingBookingOpt.get().getValidUntil().isAfter(LocalDateTime.now())) {
-            // Extend Existing
-            bookingToSave = existingBookingOpt.get();
-            bookingToSave.setValidUntil(bookingToSave.getValidUntil().plusDays(28));
-        } else {
-            // Create New
-            bookingToSave = new Booking();
-            bookingToSave.setUser(user);
-            bookingToSave.setLibrary(library);
-            bookingToSave.setBookingDate(LocalDateTime.now());
-            bookingToSave.setValidUntil(LocalDateTime.now().plusDays(28));
-            bookingToSave.setSeatNumber("Auto-" + (System.currentTimeMillis() % 1000));
-        }
-
-        // Common Updates
-        bookingToSave.setAmountPaid(finalPrice);
-        bookingToSave.setPaymentId(paymentId);
-        bookingToSave.setStatus(Booking.BookingStatus.CONFIRMED);
-
-        return bookingRepository.save(bookingToSave);
+    // Initialize Razorpay Client when the application starts
+    @PostConstruct
+    public void init() throws RazorpayException {
+        this.razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
     }
 
+    // ========================================================================
+    // STEP 1: CREATE ORDER (Calculates Fees & Talks to Razorpay)
+    // ========================================================================
+    @Transactional
+    public Booking createOrder(String userEmail, Long libraryId) throws RazorpayException {
+
+        // A. Validate User & Library
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Library library = libraryRepository.findById(libraryId)
+                .orElseThrow(() -> new RuntimeException("Library not found"));
+
+        // B. Calculate Base Price (Old vs New Customer)
+        boolean isOldCustomer = bookingRepository.existsByUser(user);
+        Double basePrice = isOldCustomer ? library.getOriginalPrice() : library.getOfferPrice(); // e.g., 400.0
+
+        // C. ADD SURCHARGE (Your requirement: User pays extra so you get full amount)
+        // Adding approx 3% to cover gateway charges
+        Double surcharge = basePrice * 0.03;
+        Double totalAmount = basePrice + surcharge;
+        // Example: Base 400 + 12 = 412. User pays 412.
+
+        // Razorpay expects amount in PAISE (Multiply by 100)
+        // 412.0 becomes 41200 paise
+        int amountInPaise = (int) (Math.round(totalAmount) * 100);
+
+        // D. Call Razorpay API
+        JSONObject orderRequest = new JSONObject();
+        orderRequest.put("amount", amountInPaise);
+        orderRequest.put("currency", "INR");
+        orderRequest.put("receipt", "txn_" + System.currentTimeMillis());
+
+        Order razorpayOrder = razorpayClient.orders.create(orderRequest);
+        String orderId = razorpayOrder.get("id");
+
+        // E. Save Temporary Booking in DB (Status: PENDING)
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setLibrary(library);
+        booking.setBookingDate(LocalDateTime.now());
+        booking.setAmountPaid(totalAmount); // Saving 412.0
+        booking.setRazorpayOrderId(orderId);
+        booking.setStatus(Booking.BookingStatus.PENDING);
+        booking.setSeatNumber("TBD"); // To Be Decided after payment
+
+        return bookingRepository.save(booking);
+    }
+
+
+    // ========================================================================
+    // STEP 2: VERIFY PAYMENT (Called after user pays on Frontend)
+    // ========================================================================
+    @Transactional
+    public Booking verifyPayment(PaymentVerificationDTO verificationDTO) {
+
+        try {
+            // A. Verify Signature (Security Check)
+            // It generates the signature locally and matches it with what Razorpay sent
+            JSONObject options = new JSONObject();
+            options.put("razorpay_order_id", verificationDTO.getRazorpayOrderId());
+            options.put("razorpay_payment_id", verificationDTO.getRazorpayPaymentId());
+            options.put("razorpay_signature", verificationDTO.getRazorpaySignature());
+
+            boolean isValid = Utils.verifyPaymentSignature(options, razorpayKeySecret);
+
+            if (!isValid) {
+                throw new RuntimeException("Payment Verification Failed: Signature Mismatch");
+            }
+
+            // B. Find the Pending Booking
+            Booking booking = bookingRepository.findByRazorpayOrderId(verificationDTO.getRazorpayOrderId())
+                    .orElseThrow(() -> new RuntimeException("Booking Order not found"));
+
+            // C. Update Booking Status to CONFIRMED
+            booking.setPaymentId(verificationDTO.getRazorpayPaymentId());
+            booking.setStatus(Booking.BookingStatus.CONFIRMED);
+
+            // Set Validity (e.g., 28 Days from now)
+            booking.setValidUntil(LocalDateTime.now().plusDays(28));
+            booking.setSeatNumber("Auto-" + (System.currentTimeMillis() % 1000)); // Assign seat logic here
+
+            // D. Generate Receipt (Payment History)
+            PaymentHistory receipt = new PaymentHistory();
+            receipt.setUser(booking.getUser());
+            receipt.setLibrary(booking.getLibrary());
+            receipt.setAmount(booking.getAmountPaid());
+            receipt.setPaymentId(booking.getPaymentId());
+            receipt.setPaymentDate(LocalDateTime.now());
+            receipt.setStatus("SUCCESS");
+            paymentHistoryRepository.save(receipt);
+
+            return bookingRepository.save(booking);
+
+        } catch (RazorpayException e) {
+            throw new RuntimeException("Razorpay Verification Error: " + e.getMessage());
+        }
+    }
 
 
     // 2. THE DASHBOARD LOGIC  for the  user
@@ -121,10 +181,13 @@ public class BookingService {
             dto.setBookingDate(booking.getBookingDate());
             dto.setValidUntil(booking.getValidUntil());
 
-            // CALCULATE DAYS REMAINING
-            long daysLeft = ChronoUnit.DAYS.between(LocalDateTime.now(), booking.getValidUntil());
-            dto.setDaysRemaining(daysLeft > 0 ? daysLeft : 0); // Never show negative days
-
+                    // Fix for null validUntil if PENDING
+                    if(booking.getValidUntil() != null) {
+                        long daysLeft = ChronoUnit.DAYS.between(LocalDateTime.now(), booking.getValidUntil());
+                        dto.setDaysRemaining(daysLeft > 0 ? daysLeft : 0); // calculate the remaining days
+                    } else {
+                        dto.setDaysRemaining(0);
+                    }
             return dto;
         }
 
