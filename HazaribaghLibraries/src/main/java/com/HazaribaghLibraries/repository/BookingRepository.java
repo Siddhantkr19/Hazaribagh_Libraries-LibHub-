@@ -30,4 +30,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Library library,
             Booking.BookingStatus status
     );
+    Optional<Booking> findByRazorpayOrderId(String razorpayOrderId);
 }
