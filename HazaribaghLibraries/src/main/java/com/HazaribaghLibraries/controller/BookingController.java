@@ -3,8 +3,10 @@ package com.HazaribaghLibraries.controller;
 import com.HazaribaghLibraries.dto.BookingRequestDTO;
 import com.HazaribaghLibraries.dto.DashboardBookingDTO;
 import com.HazaribaghLibraries.dto.PaymentHistoryDTO;
+import com.HazaribaghLibraries.dto.PaymentVerificationDTO;
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.service.BookingService;
+import com.razorpay.RazorpayException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +23,28 @@ public class BookingController {
     }
 
 
-     @PostMapping("/initiate")
-     public ResponseEntity<Booking>  createBooking(@RequestParam String userEmail, @RequestBody BookingRequestDTO request) {
+     // 1. STEP ONE: Create Order
+     // Frontend calls this when user clicks "Pay"
+     @PostMapping("/create-order")
+     public ResponseEntity<Booking> createOrder(@RequestParam String userEmail, @RequestBody BookingRequestDTO request) {
+         try {
+             Booking booking = bookingService.createOrder(userEmail, request.getLibraryId());
+             return ResponseEntity.ok(booking);
+         } catch (RazorpayException e) {
+             return ResponseEntity.internalServerError().build();
+         }
+     }
 
-         String fakepaymentid = "PAY-" + System.currentTimeMillis();
-         Booking booking = bookingService.createBooking(userEmail, request.getLibraryId(), fakepaymentid);
-        return ResponseEntity.ok(booking);
+    // 2. STEP TWO: Verify Payment
+    // Frontend calls this AFTER Razorpay success popup closes
+    @PostMapping("/verify-payment")
+    public ResponseEntity<?> verifyPayment(@RequestBody PaymentVerificationDTO verificationDTO) {
+        try {
+            Booking confirmedBooking = bookingService.verifyPayment(verificationDTO);
+            return ResponseEntity.ok(confirmedBooking);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/dashboard")
