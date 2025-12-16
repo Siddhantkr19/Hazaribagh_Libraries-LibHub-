@@ -22,7 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     @Autowired
     private EmailService emailService;
-    // [NEW] Inject these beans
+
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
