@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.HazaribaghLibraries.security.oauth2.OAuth2LoginSuccessHandler;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -73,11 +75,21 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
-                        .requestMatchers("/api/libraries/**").permitAll() // Viewing libraries open
+                        // 1. Allow everyone to SEARCH and VIEW libraries (GET only)
+                        .requestMatchers(HttpMethod.GET, "/api/libraries/**").permitAll()
+
+                        // 2. ONLY Admin can ADD, EDIT, or DELETE libraries
+                        .requestMatchers(HttpMethod.POST, "/api/libraries/**").hasRole("Admin")
+                        .requestMatchers(HttpMethod.PUT, "/api/libraries/**").hasRole("Admin")
+                        .requestMatchers(HttpMethod.DELETE, "/api/libraries/**").hasRole("Admin")
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("Admin")
                         .anyRequest().authenticated() // Everything else requires login
                 )
-
+                // [CRITICAL FIX] STOP REDIRECTING API CALLS TO GOOGLE LOGIN
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
         .oauth2Login(oauth2 -> oauth2
                 // When the user is successful, run our "Token Swap" logic
                 .successHandler(oAuth2LoginSuccessHandler)
