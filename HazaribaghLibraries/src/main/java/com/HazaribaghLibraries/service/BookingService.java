@@ -8,6 +8,7 @@ import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.entity.PaymentHistory;
 import com.HazaribaghLibraries.entity.User;
+import com.HazaribaghLibraries.entity.Booking.BookingStatus;
 import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.LibraryRepository;
 import com.HazaribaghLibraries.repository.PaymentHistoryRepository;
@@ -23,7 +24,7 @@ import org.aspectj.asm.IModelFilter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
+import java.util.Set;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -138,7 +139,13 @@ public class BookingService {
 
             // Set Validity (e.g., 28 Days from now)
             booking.setValidUntil(LocalDateTime.now().plusDays(28));
-            booking.setSeatNumber("Auto-" + (System.currentTimeMillis() % 1000)); // Assign seat logic here
+
+            Library lib = booking.getLibrary();
+            String assignedSeat = assignSeatNumber(lib.getId(), lib.getTotalSeats());
+            booking.setSeatNumber(assignedSeat);
+            // ------------------------------------
+
+
 
             // D. Generate Receipt (Payment History)
             PaymentHistory receipt = new PaymentHistory();
@@ -213,5 +220,25 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    // --- [NEW HELPER METHOD] Finds the First Available Seat ---
+    private String assignSeatNumber(Long libraryId, int totalSeats) {
+        // 1. Fetch all ACTIVE bookings for this library
+        List<Booking> activeBookings = bookingRepository.findByLibraryIdAndStatus(libraryId, BookingStatus.CONFIRMED);
+
+        // 2. Create a set of occupied numbers for fast lookup
+        Set<String> occupiedSeats = activeBookings.stream()
+                .map(Booking::getSeatNumber)
+                .collect(Collectors.toSet());
+
+        // 3. Loop from 1 to Total Seats to find the first empty one
+        for (int i = 1; i <= totalSeats; i++) {
+            String seatName = "Seat-" + i; // Generates "Seat-1", "Seat-2", etc.
+            if (!occupiedSeats.contains(seatName)) {
+                return seatName; // Found one! Return it.
+            }
+        }
+
+        throw new RuntimeException("Library is Full! No seats available.");
+    }
 
 }
