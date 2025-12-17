@@ -2,8 +2,9 @@ package com.HazaribaghLibraries;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
+@EnableScheduling
 public class HazaribaghLibrariesApplication {
 
 	public static void main(String[] args) {
