@@ -40,9 +40,7 @@ public class LibraryService {
 
     // Creat Library by Admin --- POST call
 
-    public Library createLibrary(Library library) {
-        return libraryRepository.save(library);
-    }
+
 
      // Post call of libraries according to the query ;
 
@@ -60,7 +58,7 @@ public class LibraryService {
                 .map(library -> modelMapper.map(library, LibraryCardDTO.class)
                 ).collect(Collectors.toList());
     }
-     private static boolean isNumeric(String str){
+     private static boolean isNumerics(String str){
         try{
             Double.parseDouble(str);
             return true;
@@ -96,4 +94,49 @@ public class LibraryService {
 
     }
 
+    // --- ADMIN FUNCTIONS ---
+
+    // 4. CREATE
+    public Library createLibrary(Library library) {
+        return libraryRepository.save(library);
+    }
+
+    // 5. UPDATE (Edit)
+    public Library updateLibrary(Long id, Library libraryDetails) {
+        Library library = libraryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Library not found with id: " + id));
+
+        // Update fields
+        library.setName(libraryDetails.getName());
+        library.setAddress(libraryDetails.getAddress());
+        library.setLocationTag(libraryDetails.getLocationTag());
+        library.setDescription(libraryDetails.getDescription());
+        library.setOriginalPrice(libraryDetails.getOriginalPrice());
+        library.setOfferPrice(libraryDetails.getOfferPrice());
+        library.setOpeningHours(libraryDetails.getOpeningHours());
+        library.setTotalSeats(libraryDetails.getTotalSeats());
+        library.setContactNumber(libraryDetails.getContactNumber());
+        library.setAmenities(libraryDetails.getAmenities());
+        library.setImages(libraryDetails.getImages());
+
+        return libraryRepository.save(library);
+    }
+
+    // 6. DELETE
+    public void deleteLibrary(Long id) {
+        if (!libraryRepository.existsById(id)) {
+            throw new RuntimeException("Library not found with id: " + id);
+        }
+        libraryRepository.deleteById(id);
+    }
+
+    // Helper
+    private boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 }

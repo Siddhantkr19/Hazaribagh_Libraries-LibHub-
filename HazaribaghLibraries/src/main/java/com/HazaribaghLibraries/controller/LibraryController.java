@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 
 @RequestMapping("/api/libraries") // All URLs start with this
-@CrossOrigin(origins = "http://localhost:5173") // Allows React to talk to Java
+@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true") // Allows React to talk to Java
 public class LibraryController {
 
     private final LibraryService libraryService;
@@ -48,8 +48,24 @@ public class LibraryController {
 
     // 4. Create Library (For Admin - Testing purpose)
     // URL: POST http://localhost:8080/api/libraries
+    // --- ADMIN ONLY ENDPOINTS ---
+
+    // Admin: Create
     @PostMapping
     public ResponseEntity<Library> createLibrary(@RequestBody Library library) {
         return ResponseEntity.ok(libraryService.createLibrary(library));
+    }
+
+    // Admin: Update (Edit)
+    @PutMapping("/{id}")
+    public ResponseEntity<Library> updateLibrary(@PathVariable Long id, @RequestBody Library library) {
+        return ResponseEntity.ok(libraryService.updateLibrary(id, library));
+    }
+
+    // Admin: Delete
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLibrary(@PathVariable Long id) {
+        libraryService.deleteLibrary(id);
+        return ResponseEntity.noContent().build();
     }
 }
