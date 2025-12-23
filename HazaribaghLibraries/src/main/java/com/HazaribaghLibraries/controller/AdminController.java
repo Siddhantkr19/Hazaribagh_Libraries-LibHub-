@@ -5,9 +5,12 @@ import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.UserRepository;
+import com.HazaribaghLibraries.service.PaymentReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.HazaribaghLibraries.service.SchedulerService;
+
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +29,14 @@ public class AdminController {
     private final UserRepository userRepository;
     private final SchedulerService schedulerService;
     private final LibraryRepository libraryRepository;
+    private final PaymentReportService paymentReportService;
 
-    public AdminController(BookingRepository bookingRepository, UserRepository userRepository, SchedulerService schedulerService, LibraryRepository libraryRepository) {
+    public AdminController(BookingRepository bookingRepository, UserRepository userRepository, SchedulerService schedulerService, LibraryRepository libraryRepository, PaymentReportService paymentReportService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.schedulerService = schedulerService;
         this.libraryRepository = libraryRepository;
+        this.paymentReportService = paymentReportService;
     }
 
     // 1. GET DASHBOARD STATS (Revenue, Active Seats, etc.)
@@ -169,5 +174,26 @@ public class AdminController {
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body("Error: " + e.getMessage());
             }
+    }
+    // 8. DOWNLOAD & EMAIL PAYMENT REPORT
+    // ✅ URL matches Frontend: /api/admin/reports/payments
+    @GetMapping("/reports/payments")
+    public ResponseEntity<?> downloadPaymentReport(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Long libraryId,
+            @RequestParam(required = false) String sendTo
+    ) {
+        try {
+            ByteArrayOutputStream pdfStream = paymentReportService.generatePaymentReport(email, libraryId, sendTo);
+
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/pdf")
+                    .header("Content-Disposition", "attachment; filename=payment-report.pdf")
+                    .body(pdfStream.toByteArray());
+
+        } catch (Exception e) {
+            // ✅ Handles "User Not Found" or "Library Not Found" gracefully
+            return ResponseEntity.badRequest().body("Report Generation Failed: " + e.getMessage());
+        }
     }
 }

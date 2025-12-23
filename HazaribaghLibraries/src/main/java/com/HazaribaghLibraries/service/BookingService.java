@@ -184,6 +184,9 @@ public class BookingService {
             dto.setLibraryAddress(booking.getLibrary().getAddress());
             dto.setLibraryOwnerContact(booking.getLibrary().getContactNumber());
 
+                    dto.setPaymentId(booking.getPaymentId());
+                    dto.setRazorpayOrderId(booking.getRazorpayOrderId());
+
             // Dates
             dto.setBookingDate(booking.getBookingDate());
             dto.setValidUntil(booking.getValidUntil());
@@ -239,6 +242,19 @@ public class BookingService {
         }
 
         throw new RuntimeException("Library is Full! No seats available.");
+    }
+
+    // Inside BookingService.java
+
+    public boolean isNewUser(String userEmail) {
+        // 1. Check if user exists (if not, they are definitely new)
+        User user = userRepository.findByEmail(userEmail).orElse(null);
+        if (user == null) return true;
+
+        // 2. Check if they have existing bookings
+        // existsByUser returns TRUE if they HAVE bookings (Old User)
+        // We want to return TRUE if they are NEW (So we negate it)
+        return !bookingRepository.existsByUser(user);
     }
 
 }
