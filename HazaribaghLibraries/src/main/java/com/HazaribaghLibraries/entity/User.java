@@ -2,30 +2,40 @@ package com.HazaribaghLibraries.entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
+
 import java.time.LocalDateTime;
 @Entity
 @Data
 @Table (name  = "users")
 @NoArgsConstructor
 @AllArgsConstructor
+@BatchSize(size = 20) // ✅ FIX: Prevents lag when Admin views list of Booking
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column (nullable = false)
+    @NotBlank(message = "Name is required")
+    @Size(min = 3, message = "Name must be at least 3 characters")
     private String name ;
 
-    @Column (nullable = false , unique = true)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     private String email;
 
-//    @JsonIgnore
-     private String password;
+    @Column(nullable = false)
+    private String password;
 
-    @Column (nullable = false,unique = true)
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 numeric digits")
     private String phoneNumber ;
 
     private String profilePicture ;
@@ -37,7 +47,6 @@ public class User {
         Student,
         Admin
     }
-
     private String resetToken;
     private LocalDateTime resetTokenExpiry;
 
