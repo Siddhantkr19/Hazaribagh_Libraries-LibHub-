@@ -50,7 +50,7 @@ public  ResponseEntity<UserDTO> getUserProfile(@RequestParam String userEmail){
 
             // Check file type (Allow only images)
             String contentType = file.getContentType();
-            if(contentType == null || !contentType.startsWith("image/")) {
+            if (contentType == null || !contentType.startsWith("image/")) {
                 return ResponseEntity.badRequest().body("Only Image files (JPG, PNG) are allowed");
             }
 

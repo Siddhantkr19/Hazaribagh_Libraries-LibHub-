@@ -54,7 +54,7 @@ public class AuthService {
     // [CHANGED] Register now encodes password
     public UserDTO registerUser(SignupRequestDTO signupRequest) {
         if (userRepository.findByEmail(signupRequest.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists!");
+            throw new RuntimeException("Email already register please login!");
         }
 
         User user = modelMapper.map(signupRequest, User.class);

@@ -3,16 +3,21 @@ package com.HazaribaghLibraries.controller;
 import com.HazaribaghLibraries.dto.LoginRequestDTO;
 import com.HazaribaghLibraries.dto.SignupRequestDTO;
 import com.HazaribaghLibraries.dto.UserDTO;
+import com.HazaribaghLibraries.repository.UserRepository;
 import com.HazaribaghLibraries.security.jwt.JwtUtils;
 import com.HazaribaghLibraries.service.AuthService;
 import com.HazaribaghLibraries.security.services.UserDetailsServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
@@ -20,6 +25,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -27,10 +33,19 @@ public class AuthController {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
+
+    // 1. Check Email (Public)
+    // URL: GET /api/auth/check-email?email=abc@gmail.com
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        boolean exists = userRepository.existsByEmail(email);
+        return ResponseEntity.ok(exists);
+    }
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequest) {
         // 1. Perform Login (Authentication)
@@ -47,10 +62,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@RequestBody SignupRequestDTO signupRequest) {
-        return ResponseEntity.ok(authService.registerUser(signupRequest));
+    // Change return type to ResponseEntity<?> to allow returning generic Maps for errors
+    public ResponseEntity<?> register(@Valid @RequestBody SignupRequestDTO signupRequest) {
+        try {
+            // Try to register the user
+            UserDTO registeredUser = authService.registerUser(signupRequest);
+            return ResponseEntity.ok(registeredUser);
+        } catch (RuntimeException e) {
+            // Catch the "Email already exists!" exception from AuthService
+            // Return a 400 Bad Request with a JSON object: { "message": "Email already exists!" }
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("message", e.getMessage()));
+        }
     }
-
     // [NEW] Logout Endpoint
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser() {

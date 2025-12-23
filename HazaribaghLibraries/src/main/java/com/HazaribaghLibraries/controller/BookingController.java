@@ -61,4 +61,12 @@ public class BookingController {
 
         return ResponseEntity.ok(bookingService.getPaymentHistory(userEmail, libraryId));
     }
+
+
+
+    @GetMapping("/check-eligibility")
+    public ResponseEntity<Boolean> checkWelcomeOfferEligibility(@RequestParam String userEmail) {
+        // Returns TRUE if user is new (Show Offer), FALSE if old (Hide Offer)
+        return ResponseEntity.ok(bookingService.isNewUser(userEmail));
+    }
 }

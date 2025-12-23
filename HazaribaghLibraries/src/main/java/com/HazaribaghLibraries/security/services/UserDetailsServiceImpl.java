@@ -23,11 +23,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + email));
 
-        // 2. Return a Spring Security User object
+        // 2. Return UserDetails with ROLE_ prefix
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                // Convert your Enum Role to a Spring Security Authority
+                // ✅ CRITICAL: Add "ROLE_" prefix here
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
