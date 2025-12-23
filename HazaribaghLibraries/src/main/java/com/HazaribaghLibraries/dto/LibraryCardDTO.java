@@ -1,5 +1,7 @@
 package com.HazaribaghLibraries.dto;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -19,6 +21,7 @@ public class LibraryCardDTO {
     private String ownerContact;
 
     // Facilities & Photos
-    private List<String> amenities;
-    private List<String> images;
+    // ✅ Initialize lists to prevent nulls
+    private List<String> amenities = new ArrayList<>();
+    private List<String> images = new ArrayList<>();
 }

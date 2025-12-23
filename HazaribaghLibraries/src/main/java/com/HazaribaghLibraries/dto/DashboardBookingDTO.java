@@ -24,6 +24,8 @@ public class DashboardBookingDTO {
     private LocalDateTime bookingDate;
     private LocalDateTime validUntil; // Expiry Date
 
+    private String paymentId;        // For successful payments
+    private String razorpayOrderId;  // For pending payments
     // The "Red Alert" Counter
     private long daysRemaining; // e.g. 29 (Calculated in Service)
 }

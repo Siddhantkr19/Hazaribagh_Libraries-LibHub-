@@ -10,8 +10,8 @@ public class UserDTO {
     private String name;
     private String email;
 
-    // VISIBLE FOR DEBUGGING ONLY (Remove before final demo)
-    private String password;
+//    // VISIBLE FOR DEBUGGING ONLY (Remove before final demo)
+//    private String password;
 
     private String phoneNumber;
     private String profilePicture;

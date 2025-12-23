@@ -9,6 +9,6 @@ public class PaymentHistoryDTO {
     private Double amount;
     private LocalDateTime paymentDate;
     private String libraryName;
-    private String Status;
+    private String status;
 
 }

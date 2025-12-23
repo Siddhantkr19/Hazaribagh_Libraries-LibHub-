@@ -43,7 +43,7 @@ public class JwtUtils {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
         return ResponseCookie.from(jwtCookie, jwt)
                 .path("/")       // [CHANGED] Changed from "/api" to "/" so you can SEE it in the browser inspector
-                .maxAge(24 * 60 * 60) // 1 day
+                .maxAge(1* 60 * 60) // 1 day
                 .httpOnly(true)     // [SECURITY] JavaScript cannot access this
                 .secure(false)      // Set to true in Production (HTTPS)
                 .sameSite("Lax") // CSRF protection  use // [CHANGED] Changed from "Strict" to "Lax". "Lax" is friendlier for localhost development.
@@ -52,7 +52,14 @@ public class JwtUtils {
 
     // 3. Clean Cookie (Logout)
     public ResponseCookie getCleanJwtCookie() {
-        return ResponseCookie.from(jwtCookie, null).path("/").build();
+        return ResponseCookie.from(jwtCookie, "")
+                .path("/")
+                .maxAge(0)
+
+                .httpOnly(true)
+                .secure(false)   // [IMPORTANT] Must match generateJwtCookie
+                .sameSite("Lax")
+                .build();
     }
 
     // 4. Extract Email from JWT
