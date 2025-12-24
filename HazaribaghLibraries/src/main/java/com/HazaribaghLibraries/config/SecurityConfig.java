@@ -74,11 +74,31 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/libraries/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
+
                         // ADMIN: Libraries (Using hasRole)
                         .requestMatchers(HttpMethod.POST, "/api/public/upload").hasRole("Admin")
                         .requestMatchers(HttpMethod.POST, "/api/libraries/**").hasRole("Admin")
                         .requestMatchers(HttpMethod.PUT, "/api/libraries/**").hasRole("Admin")
                         .requestMatchers(HttpMethod.DELETE, "/api/libraries/**").hasRole("Admin")
+
+                        // Help and Support
+                        .requestMatchers(HttpMethod.POST,"api/help/submit").hasRole("Student")
+                        .requestMatchers(HttpMethod.GET,"api/help/**").hasRole("Admin")
+
+                                // REVIEWS & FEEDBACK
+                                 // Publicly visible reviews
+                                .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
+
+                       // Student specific actions (ADD THE LEADING SLASH)
+                                .requestMatchers("/api/reviews/check-eligibility").hasRole("Student")
+                                .requestMatchers("/api/reviews/submit").hasRole("Student")
+
+                             // Admin specific moderation (ADD THE LEADING SLASH)
+                                .requestMatchers("/api/reviews/admin/**").hasRole("Admin")
+
+
+
+
 
                         // ADMIN: Dashboard & Booking (Using hasRole)
                         .requestMatchers("/api/admin/**").hasRole("Admin")
