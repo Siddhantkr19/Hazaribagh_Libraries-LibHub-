@@ -85,4 +85,12 @@ public class EmailService {
             throw new RuntimeException("Failed to send email with attachment", e);
         }
     }
+    public void sendReplyEmail(String toEmail, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("your-email@gmail.com"); // Make sure to configure application.properties
+        message.setTo(toEmail);
+        message.setSubject("Re: " + subject + " - LibHub Support");
+        message.setText(body);
+        mailSender.send(message);
+    }
 }
