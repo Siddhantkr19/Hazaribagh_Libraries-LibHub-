@@ -54,4 +54,8 @@ public class Library {
     @Column(name = "image_url")
     @BatchSize(size = 10) // Fetches images for 10 libraries in 1 go
     private List<String> images;
+
+    // ✅ NEW: Feedback Statistics
+    private Double averageRating = 0.0; // Default 0.0
+    private Integer totalReviews = 0;   // Default 0
 }
