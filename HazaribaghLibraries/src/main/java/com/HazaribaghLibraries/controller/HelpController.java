@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/help")
-@CrossOrigin("http://localhost:5173") // Allow your React Frontend
+//@CrossOrigin("http://localhost:5173") // Allow your React Frontend
 public class HelpController {
 
     @Autowired

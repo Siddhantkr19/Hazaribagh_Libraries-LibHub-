@@ -82,8 +82,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/libraries/**").hasRole("Admin")
 
                         // Help and Support
-                        .requestMatchers(HttpMethod.POST,"api/help/submit").hasRole("Student")
-                        .requestMatchers(HttpMethod.GET,"api/help/**").hasRole("Admin")
+                        .requestMatchers(HttpMethod.POST,"/api/help/submit").hasRole("Student")
+                        .requestMatchers(HttpMethod.GET,"/api/help/**").hasRole("Admin")
 
                                 // REVIEWS & FEEDBACK
                                  // Publicly visible reviews
@@ -127,4 +127,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

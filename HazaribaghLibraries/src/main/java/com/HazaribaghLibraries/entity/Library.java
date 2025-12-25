@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 import java.util.List;
+import java.util.ArrayList; // Import ArrayList to initialize lists
 
 @Entity
 @Data
@@ -13,48 +14,50 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "libraries")
 @BatchSize(size = 20)
-
 public class Library {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  long  id ;
+    private long id;
 
     @Column(nullable = false)
-    private String name ;
+    private String name;
 
-    @Column(nullable = false , length = 500)
-    private String address ;
+    @Column(nullable = false, length = 500)
+    private String address;
 
-    private String locationTag; // e.g., "Matwari" (For easier searching)
+    private String locationTag;
 
-    private String description ;
+    private String description;
 
-    private Double originalPrice;  // eg  :  400
+    private Double originalPrice;
 
-    private Double offerPrice ;  // eg : offer upto 20%  which is approx 350 .
+    private Double offerPrice;
 
     private String openingHours;
 
     @Column(nullable = false)
-    private  Integer totalSeats ;   // eg : 60
+    private Integer totalSeats;
 
     @Column(nullable = false)
-    private String contactNumber ;
+    private String contactNumber;
 
-    @ElementCollection
-    @CollectionTable(name = "library_amenities", joinColumns = @JoinColumn(name = "library_id"))
-    @Column(name = "amenity")
-    @BatchSize(size = 20) // Fetches amenities for 10 libraries in 1 go
-    private List<String> amenities; // e.g., ["AC", "WiFi", "RO Water"]
+    // --- ⚠️ CHANGED SECTION START ---
 
-    // This creates a separate table for image URLs
-    @ElementCollection
-    @CollectionTable(name = "library_images", joinColumns = @JoinColumn(name = "library_id"))
-    @Column(name = "image_url")
-    @BatchSize(size = 20) // Fetches images for 10 libraries in 1 go
-    private List<String> images;
+    // Old @ElementCollection is replaced with @OneToMany
+    // CascadeType.ALL means if you save a Library, it auto-saves the amenities
+    // orphanRemoval = true means if you remove an amenity from the list, it deletes from DB
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "library_id") // This creates the Foreign Key in the child table
+    @BatchSize(size = 20)
+    private List<LibraryAmenity> amenities = new ArrayList<>();
 
-    // ✅ NEW: Feedback Statistics
-    private Double averageRating = 0.0; // Default 0.0
-    private Integer totalReviews = 0;   // Default 0
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "library_id")
+    @BatchSize(size = 20)
+    private List<LibraryImage> images = new ArrayList<>();
+
+    // --- ⚠️ CHANGED SECTION END ---
+
+    private Double averageRating = 0.0;
+    private Integer totalReviews = 0;
 }

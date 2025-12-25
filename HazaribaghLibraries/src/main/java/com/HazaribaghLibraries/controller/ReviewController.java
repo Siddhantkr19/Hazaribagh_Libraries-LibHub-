@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
-@CrossOrigin("http://localhost:5173")
+//@CrossOrigin("http://localhost:5173")
 public class ReviewController {
 
     @Autowired

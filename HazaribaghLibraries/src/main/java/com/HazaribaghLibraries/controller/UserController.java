@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RequestMapping("/api/auth") // Common standard for login/register APIs
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 public class UserController {
     private final UserService userService;
@@ -22,12 +22,12 @@ public class UserController {
     }
     // URL: POST http://localhost:8080/api/auth/register
 
-    // this not working
-    @PostMapping("/registers")
-     public ResponseEntity<UserDTO> registerUser(@RequestBody User user){
-        return ResponseEntity.ok(userService.registerUser(user));
-
-    }
+//    // this not working
+//    @PostMapping("/registers")
+//     public ResponseEntity<UserDTO> registerUser(@RequestBody User user){
+//        return ResponseEntity.ok(userService.registerUser(user));
+//
+//    }
 
     // cheak login
     // URL: GET http://localhost:8080/api/auth/profile?userEmail=rahul@gmail.com

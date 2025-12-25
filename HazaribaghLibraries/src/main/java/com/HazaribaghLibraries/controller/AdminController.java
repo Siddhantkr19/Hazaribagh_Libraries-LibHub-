@@ -22,7 +22,7 @@ import com.HazaribaghLibraries.entity.Booking.BookingStatus;
 import com.HazaribaghLibraries.repository.LibraryRepository;
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AdminController {
 
     private final BookingRepository bookingRepository;

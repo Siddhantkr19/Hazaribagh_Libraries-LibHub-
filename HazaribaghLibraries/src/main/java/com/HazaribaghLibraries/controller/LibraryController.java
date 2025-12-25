@@ -1,19 +1,16 @@
 package com.HazaribaghLibraries.controller;
 
-
 import com.HazaribaghLibraries.dto.LibraryCardDTO;
 import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.service.LibraryService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-
 @RequestMapping("/api/libraries") // All URLs start with this
-@CrossOrigin(origins = "http://localhost:5173" , allowCredentials = "true") // Allows React to talk to Java
+// @CrossOrigin...  <-- REMOVED! We let SecurityConfig.java handle this globally now.
 public class LibraryController {
 
     private final LibraryService libraryService;
@@ -21,24 +18,20 @@ public class LibraryController {
     public LibraryController(LibraryService libraryService) {
         this.libraryService = libraryService;
     }
+
     // 1. Get All Libraries
-    // URL: GET http://localhost:8080/api/libraries
     @GetMapping
     public ResponseEntity<List<LibraryCardDTO>> getAllLibraries() {
         return ResponseEntity.ok(libraryService.getAllLibraries());
     }
 
     // 2. Search Libraries (Smart Search: Name OR Price)
-    // URL: GET http://localhost:8080/api/libraries/search?query=Matwari
-    // URL: GET http://localhost:8080/api/libraries/search?query=500
     @GetMapping("/search")
     public ResponseEntity<List<LibraryCardDTO>> searchLibraries(@RequestParam String query) {
         return ResponseEntity.ok(libraryService.searchLibraries(query));
     }
 
     // 3. Get Single Library Details
-    // URL: GET http://localhost:8080/api/libraries/1?userEmail=rahul@gmail.com
-    // (We pass email to check for the discount logic)
     @GetMapping("/{id}")
     public ResponseEntity<LibraryCardDTO> getLibraryDetails(
             @PathVariable Long id,
@@ -46,9 +39,8 @@ public class LibraryController {
         return ResponseEntity.ok(libraryService.getLibraryDetails(id, userEmail));
     }
 
-    // 4. Create Library (For Admin - Testing purpose)
-    // URL: POST http://localhost:8080/api/libraries
     // --- ADMIN ONLY ENDPOINTS ---
+    // (SecurityConfig protects these URLs so only Admins can use them)
 
     // Admin: Create
     @PostMapping
