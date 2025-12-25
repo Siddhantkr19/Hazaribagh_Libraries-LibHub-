@@ -20,17 +20,17 @@ public class ReviewService {
     @Autowired private BookingRepository bookingRepository;
     @Autowired private UserRepository userRepository;
 
-    // 1. Logic: Check Eligibility
+    // 1. Check Eligibility
     public Map<String, Object> checkEligibility(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // Rule: Check if 3 days have passed (Currently set to 0 for testing)
+        // For testing: plusDays(0). For Prod: plusDays(3)
         boolean isTimePassed = booking.getBookingDate().plusDays(0).isBefore(LocalDateTime.now());
         boolean alreadyReviewed = reviewRepository.existsByBookingId(bookingId);
 
         if (!isTimePassed) {
-            return Map.of("canReview", false, "reason", "You can review after 3 days of booking.");
+            return Map.of("canReview", false, "reason", "You can review after 3 days.");
         }
         if (alreadyReviewed) {
             return Map.of("canReview", false, "reason", "You have already reviewed this booking.");
@@ -38,20 +38,19 @@ public class ReviewService {
         return Map.of("canReview", true);
     }
 
-    // 2. Logic: Submit Review
+    // 2. Submit Review
+    @Transactional
     public void submitReview(ReviewRequestDTO request) {
-
         User user = userRepository.findByEmail(request.getUserEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Booking booking = bookingRepository.findById(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // ✅ derive library from booking
         Library library = booking.getLibrary();
 
         if (reviewRepository.existsByBookingId(request.getBookingId())) {
-            throw new RuntimeException("Review already exists for this booking.");
+            throw new RuntimeException("Review already exists.");
         }
 
         Review review = new Review();
@@ -60,55 +59,84 @@ public class ReviewService {
         review.setLibrary(library);
         review.setRating(request.getRating());
         review.setComment(request.getComment());
+        review.setVisible(true);
 
         reviewRepository.save(review);
 
-        updateLibraryRating(library, request.getRating());
+        // ✅ ONLY use recalculate. It effectively updates the rating safely.
+        recalculateLibraryRating(library);
     }
 
-    // 3. Logic: Get Public Reviews
+    // 3. Get Public Reviews + SELF-HEAL RATING
     public List<Review> getPublicLibraryReviews(Long libraryId) {
-        return reviewRepository.findByLibraryIdAndIsVisibleTrueOrderByCreatedAtDesc(libraryId);
+        // 1. Fetch all visible reviews
+        List<Review> reviews = reviewRepository.findByLibrary_IdAndIsVisibleTrueOrderByCreatedAtDesc(libraryId);
+
+        // 2. SELF-HEALING LOGIC
+        // If the database numbers don't match the actual reviews, fix it instantly.
+        if (!reviews.isEmpty()) {
+            double sum = 0;
+            for (Review r : reviews) {
+                sum += r.getRating();
+            }
+            double actualAverage = sum / reviews.size();
+            int actualCount = reviews.size();
+
+            Library library = libraryRepository.findById(libraryId).orElse(null);
+
+            if (library != null) {
+                boolean isOutOfSync = library.getAverageRating() == null ||
+                        Math.abs(library.getAverageRating() - actualAverage) > 0.01 ||
+                        library.getTotalReviews() != actualCount;
+
+                if (isOutOfSync) {
+                    System.out.println("🔄 Self-Healing triggered for Library ID " + libraryId);
+                    library.setAverageRating(actualAverage);
+                    library.setTotalReviews(actualCount);
+                    libraryRepository.save(library);
+                }
+            }
+        }
+
+        return reviews;
     }
 
-    // 4. Logic: Get All Reviews (Admin)
+    // 4. Admin: Get All Reviews
     public List<Review> getAllReviewsForAdmin() {
-        return reviewRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        return reviewRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    // 5. Logic: Toggle Visibility (Admin)
-// In ReviewService
+    // 5. Admin: Toggle Visibility
     @Transactional
     public Review toggleVisibilityAndReturn(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found with id: " + reviewId));
+                .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        // Flip the visibility status
         review.setVisible(!review.isVisible());
+        reviewRepository.save(review);
 
-        // Save and return the updated review
-        return reviewRepository.save(review);
+        // ✅ IMPORTANT: Update rating when a review is hidden/shown
+        recalculateLibraryRating(review.getLibrary());
+
+        return review;
     }
 
     // --- Helper Method ---
-    private void updateLibraryRating(Library library, int newRating) {
+    private void recalculateLibraryRating(Library library) {
+        List<Review> reviews = reviewRepository.findByLibrary_IdAndIsVisibleTrueOrderByCreatedAtDesc(library.getId());
 
-        // ✅ Handle first review case
-        Double currentAvg = library.getAverageRating();
-        Integer totalReviews = library.getTotalReviews();
-
-        if (currentAvg == null || totalReviews == null) {
-            library.setAverageRating((double) newRating);
-            library.setTotalReviews(1);
+        if (reviews.isEmpty()) {
+            library.setAverageRating(0.0);
+            library.setTotalReviews(0);
         } else {
-            double updatedAvg =
-                    ((currentAvg * totalReviews) + newRating) / (totalReviews + 1);
+            double average = reviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
 
-            library.setAverageRating(updatedAvg);
-            library.setTotalReviews(totalReviews + 1);
+            library.setAverageRating(average);
+            library.setTotalReviews(reviews.size());
         }
-
         libraryRepository.save(library);
     }
-
 }

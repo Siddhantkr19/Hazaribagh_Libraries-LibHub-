@@ -24,4 +24,7 @@ public class LibraryCardDTO {
     // ✅ Initialize lists to prevent nulls
     private List<String> amenities = new ArrayList<>();
     private List<String> images = new ArrayList<>();
+
+    private Double averageRating = 0.0; // Default 0.0
+    private Integer totalReviews = 0;
 }

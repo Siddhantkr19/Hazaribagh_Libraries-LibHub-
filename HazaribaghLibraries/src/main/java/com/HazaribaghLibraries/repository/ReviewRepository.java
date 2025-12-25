@@ -6,12 +6,16 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    // 1. Get all reviews for a specific library (for Public Page)
-    List<Review> findByLibraryIdAndIsVisibleTrueOrderByCreatedAtDesc(Long libraryId);
+    // ✅ FIX: Added underscore (_) after Library.
+    // This correctly maps to: Review -> Library -> Id
+    List<Review> findByLibrary_IdAndIsVisibleTrueOrderByCreatedAtDesc(Long libraryId);
 
-    // 2. Get ALL reviews for a library (for Admin)
-    List<Review> findByLibraryIdOrderByCreatedAtDesc(Long libraryId);
+    // For Admin: Get ALL reviews for a specific library (Visible or Hidden)
+    List<Review> findByLibrary_IdOrderByCreatedAtDesc(Long libraryId);
 
-    // 3. Check if a review already exists for this booking ID
+    // Check duplicate
     boolean existsByBookingId(Long bookingId);
+
+    // Admin global list
+    List<Review> findAllByOrderByCreatedAtDesc();
 }

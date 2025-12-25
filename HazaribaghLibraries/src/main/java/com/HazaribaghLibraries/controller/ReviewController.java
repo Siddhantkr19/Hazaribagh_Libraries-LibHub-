@@ -53,9 +53,9 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getAllReviewsForAdmin());
     }
 
+    // 3. Admin: Toggle Visibility (Returns Updated Object)
     @PutMapping("/admin/toggle-visibility/{id}")
     public ResponseEntity<Review> toggleVisibility(@PathVariable Long id) {
-        System.out.println("TOGGLE ENDPOINT HIT FOR ID: " + id);
         try {
             Review updatedReview = reviewService.toggleVisibilityAndReturn(id);
             return ResponseEntity.ok(updatedReview);
