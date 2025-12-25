@@ -74,6 +74,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         response.addHeader(HttpHeaders.SET_COOKIE, cookieWithRootPath.toString());
 
         // 6.  Direct to Dashboard. The cookie is now global (path="/"), so this is safe.
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/dashboard");
+        getRedirectStrategy().sendRedirect(request, response, "https://libhub-kappa.vercel.app/dashboard");
     }
 }
