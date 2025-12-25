@@ -19,22 +19,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Check if the admin already exists
         if (!userRepository.existsByEmail("siddhantkumar7488@gmail.com")) {
-
             User admin = new User();
             admin.setName("Siddhant Admin");
             admin.setEmail("siddhantkumar7488@gmail.com");
-            // We MUST hash the password using BCrypt
-            admin.setPassword(passwordEncoder.encode("sidd@1234"));
-            admin.setPhoneNumber("9999999999"); // Dummy number to satisfy validation
-            admin.setRole(User.Role.Admin); // ✅ Sets you as ADMIN
-
+            admin.setPassword(passwordEncoder.encode("sidd@1234")); // Encrypted for security
+            admin.setPhoneNumber("0000000000"); // Placeholder
+            admin.setRole(User.Role.Admin); // ✅ Essential for Admin access
             userRepository.save(admin);
-
-            System.out.println("✅ ADMIN USER CREATED: siddhantkumar7488@gmail.com");
-        } else {
-            System.out.println("ℹ️ Admin user already exists.");
+            System.out.println("✅ Default Admin User Created.");
         }
     }
 }
