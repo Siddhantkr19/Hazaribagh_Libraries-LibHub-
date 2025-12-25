@@ -57,8 +57,8 @@ public class JwtUtils {
                 .maxAge(0)
 
                 .httpOnly(true)
-                .secure(false)   // [IMPORTANT] Must match generateJwtCookie
-                .sameSite("Lax")
+                .secure(true)   // [IMPORTANT] Must match generateJwtCookie
+                .sameSite("none")
                 .build();
     }
 
