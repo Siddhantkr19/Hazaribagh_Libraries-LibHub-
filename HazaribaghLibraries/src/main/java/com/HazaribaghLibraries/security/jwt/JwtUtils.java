@@ -43,10 +43,10 @@ public class JwtUtils {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
         return ResponseCookie.from(jwtCookie, jwt)
                 .path("/")       // [CHANGED] Changed from "/api" to "/" so you can SEE it in the browser inspector
-                .maxAge(1* 60 * 60) // 1 day
+                .maxAge(1800000 ) //  30 minute
                 .httpOnly(true)     // [SECURITY] JavaScript cannot access this
-                .secure(false)      // Set to true in Production (HTTPS)
-                .sameSite("Lax") // CSRF protection  use // [CHANGED] Changed from "Strict" to "Lax". "Lax" is friendlier for localhost development.
+                .secure(true)      // Set to true in Production (HTTPS)
+                .sameSite("None") // CSRF protection  use // [CHANGED] Changed from "Strict" to "Lax". "Lax" is friendlier for localhost development.
                 .build();
     }
 
@@ -58,7 +58,7 @@ public class JwtUtils {
 
                 .httpOnly(true)
                 .secure(true)   // [IMPORTANT] Must match generateJwtCookie
-                .sameSite("none")
+                .sameSite("None")
                 .build();
     }
 
