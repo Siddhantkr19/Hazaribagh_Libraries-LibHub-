@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -64,44 +65,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
-                        .requestMatchers("/login/oauth2/code/**").permitAll()
-
-                        // PUBLIC
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow pre-flight checks
+                        .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/code/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/libraries/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
 
-
-                        // ADMIN: Libraries (Using hasRole)
+                        // Admin Routes
                         .requestMatchers(HttpMethod.POST, "/api/public/upload").hasRole("Admin")
                         .requestMatchers(HttpMethod.POST, "/api/libraries/**").hasRole("Admin")
                         .requestMatchers(HttpMethod.PUT, "/api/libraries/**").hasRole("Admin")
                         .requestMatchers(HttpMethod.DELETE, "/api/libraries/**").hasRole("Admin")
-
-                        // Help and Support
-                        .requestMatchers(HttpMethod.POST,"/api/help/submit").hasRole("Student")
-                        .requestMatchers(HttpMethod.GET,"/api/help/**").hasRole("Admin")
-
-                                // REVIEWS & FEEDBACK
-                                 // Publicly visible reviews
-                                .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
-
-                       // Student specific actions (ADD THE LEADING SLASH)
-                                .requestMatchers("/api/reviews/check-eligibility").hasRole("Student")
-                                .requestMatchers("/api/reviews/submit").hasRole("Student")
-
-                             // Admin specific moderation (ADD THE LEADING SLASH)
-                                .requestMatchers("/api/reviews/admin/**").hasRole("Admin")
-
-
-
-
-
-                        // ADMIN: Dashboard & Booking (Using hasRole)
                         .requestMatchers("/api/admin/**").hasRole("Admin")
+                        .requestMatchers("/api/reviews/admin/**").hasRole("Admin")
+                        .requestMatchers(HttpMethod.GET, "/api/help/**").hasRole("Admin")
+
+                        // Student Routes
+                        .requestMatchers(HttpMethod.POST, "/api/help/submit").hasRole("Student")
+                        .requestMatchers("/api/reviews/check-eligibility").hasRole("Student")
+                        .requestMatchers("/api/reviews/submit").hasRole("Student")
 
                         .anyRequest().authenticated()
                 )
@@ -119,17 +102,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",                 // Local testing
-                "https://libhub-6izs.onrender.com",      // Backend self-access
-                "https://libhub-kappa.vercel.app"        // 👈 YOUR NEW VERCEL URL
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",                 // Localhost
+                "https://libhub-kappa.vercel.app",       // Production Frontend
+                "https://libhub-6izs.onrender.com"       // Production Backend (Self)
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept" , "Origin"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        configuration.setAllowCredentials(true); // CRITICAL for Cookies
+        configuration.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }

@@ -64,7 +64,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // We use jwtCookie.getName() here, which grabs "libhub-token-v3" from properties
         ResponseCookie cookieWithRootPath = ResponseCookie.from(jwtCookie.getName(), jwtCookie.getValue())
                 .path("/")               // Available everywhere
-                .maxAge(1800000)    // 1 hour
+                .maxAge(24 * 60 * 60)    // 1 hour
                 .httpOnly(true)          // Secure
                 .secure(true)           // ✅ SET TO TRUE
                 .sameSite("None")    // ✅ SET TO "None for the production

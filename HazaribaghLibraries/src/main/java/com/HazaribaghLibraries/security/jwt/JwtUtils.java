@@ -43,7 +43,7 @@ public class JwtUtils {
         String jwt = generateTokenFromUsername(userPrincipal.getUsername());
         return ResponseCookie.from(jwtCookie, jwt)
                 .path("/")       // [CHANGED] Changed from "/api" to "/" so you can SEE it in the browser inspector
-                .maxAge(1800000 ) //  30 minute
+                .maxAge(24 * 60 * 60 ) //  30 minute
                 .httpOnly(true)     // [SECURITY] JavaScript cannot access this
                 .secure(true)      // Set to true in Production (HTTPS)
                 .sameSite("None") // CSRF protection  use // [CHANGED] Changed from "Strict" to "Lax". "Lax" is friendlier for localhost development.
@@ -87,14 +87,8 @@ public class JwtUtils {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
             return true;
-        } catch (MalformedJwtException e) {
+        } catch (Exception e) {
             System.err.println("Invalid JWT token: " + e.getMessage());
-        } catch (ExpiredJwtException e) {
-            System.err.println("JWT token is expired: " + e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            System.err.println("JWT token is unsupported: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.err.println("JWT claims string is empty: " + e.getMessage());
         }
         return false;
     }
