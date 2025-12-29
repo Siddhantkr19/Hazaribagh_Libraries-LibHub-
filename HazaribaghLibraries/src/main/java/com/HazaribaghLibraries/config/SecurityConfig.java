@@ -104,7 +104,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",                 // Localhost
-                "https://libhub-kappa.vercel.app",       // Production Frontend
+                "https://libhub-kappa.vercel.app",
+                "https://libhub.live",            // <--- Add domain
+                "https://www.libhub.live",// Production Frontend
                 "https://libhub-6izs.onrender.com"       // Production Backend (Self)
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
