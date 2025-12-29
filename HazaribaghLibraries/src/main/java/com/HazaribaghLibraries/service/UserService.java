@@ -19,11 +19,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final String UPLOAD_DIR = "uploads/";
+    private final PhotoService photoService ;
 
-    public UserService(UserRepository userRepository, ModelMapper modelMapper) {
+
+    public UserService(UserRepository userRepository, ModelMapper modelMapper, PhotoService photoService) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+        this.photoService = photoService;
     }
+
   // register new user  && SignUp New User
     public UserDTO registerUser(User user){
          if(userRepository.findByEmail(user.getEmail()).isPresent()){
@@ -47,28 +51,15 @@ public class UserService {
 
     // Upload Profile Picture
 
+    // ✅ NEW: Upload Profile Picture (Using Cloudinary)
     public UserDTO uploadProfilePicture(String userEmail, MultipartFile file) throws IOException {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 1. Create Folder if missing
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        // 1. Upload to Cloudinary (returns a permanent URL like https://res.cloudinary.com/...)
+        String imageUrl = photoService.uploadImage(file);
 
-        // 2. Generate Filename
-        String originalFilename = file.getOriginalFilename();
-        // Add UUID to prevent duplicate names
-        String uniqueFilename = UUID.randomUUID().toString() + "_" + originalFilename;
-
-        // 3. Save File
-        Path filePath = uploadPath.resolve(uniqueFilename);
-        Files.copy(file.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-        // 4. Save URL to Database (Must start with /uploads/)
-        String imageUrl = "/uploads/" + uniqueFilename;
-
+        // 2. Save the URL to Database
         user.setProfilePicture(imageUrl);
         User savedUser = userRepository.save(user);
 

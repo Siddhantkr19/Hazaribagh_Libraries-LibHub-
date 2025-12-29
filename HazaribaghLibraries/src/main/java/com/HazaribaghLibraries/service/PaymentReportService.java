@@ -59,26 +59,23 @@ public class PaymentReportService {
             Library library = libraryRepository.findById(libraryId)
                     .orElseThrow(() -> new RuntimeException("Library not found"));
 
-            history = paymentHistoryRepository
-                    .findByUserAndLibraryOrderByPaymentDateDesc(user, library);
+            // Use the new N+1 safe method
+            history = paymentHistoryRepository.findByUserAndLibraryWithDetails(user, library);
 
             reportTitle = "Payment Report for " + user.getName()
                     + " (" + library.getName() + ")";
 
         } else if (libraryId != null) {
-            Library library = libraryRepository.findById(libraryId)
-                    .orElseThrow(() -> new RuntimeException("Library not found"));
+            // We don't need to fetch the library here anymore, the query does it.
+            // Use the new N+1 safe method
+            history = paymentHistoryRepository.findByLibraryIdWithDetails(libraryId);
 
-            history = paymentHistoryRepository.findAll().stream()
-                    .filter(p -> Objects.equals(p.getLibrary().getId(), libraryId))
-
-                    .sorted((a, b) -> b.getPaymentDate().compareTo(a.getPaymentDate()))
-                    .toList();
-
-            reportTitle = "Full Payment History - " + library.getName();
+            // Get the library name from the first result (if it exists)
+            String libraryName = history.isEmpty() ? "Unknown Library" : history.get(0).getLibrary().getName();
+            reportTitle = "Full Payment History - " + libraryName;
 
         } else {
-            history = paymentHistoryRepository.findAll();
+            history = paymentHistoryRepository.findAllWithDetails();
         }
 
         ByteArrayOutputStream pdfStream = createPdf(history, reportTitle);

@@ -23,7 +23,9 @@ public class EmailService {
     private String fromEmail;
 
     public void sendResetEmail(String toEmail, String token) {
-        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        // This should point to your frontend application URL (libhub.live)
+        String resetLink = "https://libhub.live/reset-password?token=" + token;
+
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -85,9 +87,10 @@ public class EmailService {
             throw new RuntimeException("Failed to send email with attachment", e);
         }
     }
+    @Async
     public void sendReplyEmail(String toEmail, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("your-email@gmail.com"); // Make sure to configure application.properties
+        message.setFrom(fromEmail); // Use the configured 'from' email
         message.setTo(toEmail);
         message.setSubject("Re: " + subject + " - LibHub Support");
         message.setText(body);

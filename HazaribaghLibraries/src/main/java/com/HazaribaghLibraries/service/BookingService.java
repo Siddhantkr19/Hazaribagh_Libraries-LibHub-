@@ -115,9 +115,22 @@ public class BookingService {
     @Transactional
     public Booking verifyPayment(PaymentVerificationDTO verificationDTO) {
 
+        // 1. ✅ FIX: Find the Booking FIRST using the Order ID to get the Library
+        Booking booking = bookingRepository.findByRazorpayOrderId(verificationDTO.getRazorpayOrderId())
+                .orElseThrow(() -> new RuntimeException("Booking Order not found"));
+
+        // 2. Get the Library from the booking
+        Library library = booking.getLibrary();
+
+        // 3. 🛑 SECURITY CHECK: Is the Library Full?
+        int takenSeats = bookingRepository.countActiveBookingsByLibrary(library.getId());
+
+        if (takenSeats >= library.getTotalSeats()) {
+            throw new RuntimeException("Booking Failed: Library is Full! Please contact support for a refund.");
+        }
+
         try {
             // A. Verify Signature (Security Check)
-            // It generates the signature locally and matches it with what Razorpay sent
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", verificationDTO.getRazorpayOrderId());
             options.put("razorpay_payment_id", verificationDTO.getRazorpayPaymentId());
@@ -129,25 +142,18 @@ public class BookingService {
                 throw new RuntimeException("Payment Verification Failed: Signature Mismatch");
             }
 
-            // B. Find the Pending Booking
-            Booking booking = bookingRepository.findByRazorpayOrderId(verificationDTO.getRazorpayOrderId())
-                    .orElseThrow(() -> new RuntimeException("Booking Order not found"));
-
-            // C. Update Booking Status to CONFIRMED
+            // B. Update Booking Status to CONFIRMED
             booking.setPaymentId(verificationDTO.getRazorpayPaymentId());
             booking.setStatus(Booking.BookingStatus.CONFIRMED);
 
             // Set Validity (e.g., 28 Days from now)
             booking.setValidUntil(LocalDateTime.now().plusDays(28));
 
-            Library lib = booking.getLibrary();
-            String assignedSeat = assignSeatNumber(lib.getId(), lib.getTotalSeats());
+            // Assign Seat
+            String assignedSeat = assignSeatNumber(library.getId(), library.getTotalSeats());
             booking.setSeatNumber(assignedSeat);
-            // ------------------------------------
 
-
-
-            // D. Generate Receipt (Payment History)
+            // C. Generate Receipt (Payment History)
             PaymentHistory receipt = new PaymentHistory();
             receipt.setUser(booking.getUser());
             receipt.setLibrary(booking.getLibrary());
@@ -163,7 +169,6 @@ public class BookingService {
             throw new RuntimeException("Razorpay Verification Error: " + e.getMessage());
         }
     }
-
 
     // 2. THE DASHBOARD LOGIC  for the  user
     public List<DashboardBookingDTO> getUserDashboard(String userEmail) {

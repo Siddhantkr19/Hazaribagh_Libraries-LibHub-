@@ -63,4 +63,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Object[]> getLast7DaysRevenue();
 
     List<Booking> findByLibraryIdAndStatus(Long libraryId, Booking.BookingStatus bookingStatus);
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.library.id = :libraryId AND b.status = 'CONFIRMED' AND b.validUntil > CURRENT_TIMESTAMP")
+    int countActiveBookingsByLibrary(@Param("libraryId") Long libraryId);
 }
