@@ -70,17 +70,17 @@ public class AdminController {
         return ResponseEntity.ok(bookingRepository.findAllBookingsWithUser());
     }
 
-    // 3. MANUAL ACTION: Cancel a User's Booking
-    @PostMapping("/bookings/cancel/{id}")
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-        booking.setStatus(Booking.BookingStatus.CANCELLED);
-        bookingRepository.save(booking);
-
-        return ResponseEntity.ok("Booking cancelled successfully by Admin");
-    }
+//    // 3. MANUAL ACTION: Cancel a User's Booking
+//    @PostMapping("/bookings/cancel/{id}")
+//    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+//        Booking booking = bookingRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Booking not found"));
+//
+//        booking.setStatus(Booking.BookingStatus.CANCELLED);
+//        bookingRepository.save(booking);
+//
+//        return ResponseEntity.ok("Booking cancelled successfully by Admin");
+//    }
     @PostMapping("/trigger-reminders")
     public ResponseEntity<String> triggerReminders() {
         // Run the logic immediately
