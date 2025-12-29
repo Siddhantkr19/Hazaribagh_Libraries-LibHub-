@@ -1,6 +1,7 @@
 package com.HazaribaghLibraries.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +13,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Data
 @Table (name  = "users")
@@ -49,5 +52,14 @@ public class User {
     }
     private String resetToken;
     private LocalDateTime resetTokenExpiry;
+
+    // 👇 ADD THESE LISTS AT THE BOTTOM
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore // 🛑 Critical: Stops the infinite loop
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore // 🛑 Critical: Stops the infinite loop
+    private List<Review> reviews;
 
 }

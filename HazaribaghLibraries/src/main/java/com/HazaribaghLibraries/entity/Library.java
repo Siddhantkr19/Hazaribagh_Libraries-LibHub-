@@ -1,5 +1,6 @@
 package com.HazaribaghLibraries.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -60,4 +61,9 @@ public class Library {
 
     private Double averageRating = 0.0;
     private Integer totalReviews = 0;
+
+    // 👇 ADD THIS LIST AT THE BOTTOM
+    @OneToMany(mappedBy = "library", cascade = CascadeType.ALL)
+    @JsonIgnore // 🛑 Critical: Stops the infinite loop
+    private List<Booking> bookings;
 }
