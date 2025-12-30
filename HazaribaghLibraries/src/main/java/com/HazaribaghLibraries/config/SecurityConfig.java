@@ -76,6 +76,8 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/libraries").permitAll()    // <--- ADD THIS (Exact match)
+                       // <--- Catches /libraries/1
                         // Admin Routes
                         .requestMatchers(HttpMethod.POST, "/api/public/upload").hasRole("Admin")
                         .requestMatchers(HttpMethod.POST, "/api/libraries/**").hasRole("Admin")
