@@ -18,7 +18,7 @@ public class LibraryCardDTO {
 
     // Owner Info (Visible as requested)
     private Integer totalSeats;
-    private String ownerContact;
+    private String contactNumber;
 
     // Facilities & Photos
     // ✅ Initialize lists to prevent nulls
