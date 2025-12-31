@@ -19,7 +19,8 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+//    @Value("${spring.mail.username}")
+@Value("siddhantkumar7488@gmail.com")
     private String fromEmail;
 
     public void sendResetEmail(String toEmail, String token) {
