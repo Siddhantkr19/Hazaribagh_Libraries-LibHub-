@@ -33,8 +33,9 @@ public class LibraryService {
     // 1. GET ALL LIBRARIES
     public List<LibraryCardDTO> getAllLibraries() {
         List<Library> libraries = libraryRepository.findAll();
+        // Use the helper method to ensure clean strings
         return libraries.stream()
-                .map(library -> modelMapper.map(library, LibraryCardDTO.class))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +49,7 @@ public class LibraryService {
             libraries = libraryRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCaseOrLocationTagContainingIgnoreCase(query, query, query);
         }
         return libraries.stream()
-                .map(library -> modelMapper.map(library, LibraryCardDTO.class))
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -57,40 +58,56 @@ public class LibraryService {
         Library library = libraryRepository.findById(libraryId)
                 .orElseThrow(() -> new RuntimeException("Library not found with id: " + libraryId));
 
-        LibraryCardDTO dto = modelMapper.map(library, LibraryCardDTO.class);
+        // Use the helper method here too
+        LibraryCardDTO dto = convertToDTO(library);
 
         if (userEmail != null && !userEmail.equals("null") && !userEmail.isEmpty()) {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
 
-            // ✅ FIX: Check if they have BOOKINGS, not just if they exist
             boolean isOldCustomer = bookingRepository.existsByUser(user);
 
             if (isOldCustomer) {
-                // If they booked before, they pay the original price (no offer)
                 dto.setOfferPrice(dto.getOriginalPrice());
             }
         }
         return dto;
     }
 
+    // --- 🛠️ HELPER: Converts Entity to Clean DTO ---
+    private LibraryCardDTO convertToDTO(Library library) {
+        LibraryCardDTO dto = modelMapper.map(library, LibraryCardDTO.class);
+
+        // 1. CLEAN AMENITIES: Extract just the name string (e.g. "Wi-Fi")
+        if (library.getAmenities() != null) {
+            List<String> cleanAmenities = library.getAmenities().stream()
+                    .map(LibraryAmenity::getName) // Only get the Name
+                    .collect(Collectors.toList());
+            dto.setAmenities(cleanAmenities);
+        }
+
+        // 2. CLEAN IMAGES: Extract just the URL string
+        if (library.getImages() != null) {
+            List<String> cleanImages = library.getImages().stream()
+                    .map(LibraryImage::getImageUrl) // Only get the URL
+                    .collect(Collectors.toList());
+            dto.setImages(cleanImages);
+        }
+
+        return dto;
+    }
+
     // --- ADMIN FUNCTIONS ---
 
-    // 4. CREATE LIBRARY (Safe conversion for Images/Amenities)
     public Library createLibrary(Library libraryInput) {
-        // NOTE: If you are sending DTOs, ensure your Controller maps them to Entity first.
-        // Or better, use the logic I gave previously to map Strings -> Entities.
-        // Assuming your Controller handles DTO -> Entity mapping now, we just save.
         return libraryRepository.save(libraryInput);
     }
 
-    // 5. UPDATE LIBRARY (Database Safe)
-    @Transactional // ✅ Important for updates
+    @Transactional
     public Library updateLibrary(Long id, Library libraryDetails) {
         Library library = libraryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Library not found with id: " + id));
 
-        // Update Basic Fields
         library.setName(libraryDetails.getName());
         library.setAddress(libraryDetails.getAddress());
         library.setLocationTag(libraryDetails.getLocationTag());
@@ -101,13 +118,11 @@ public class LibraryService {
         library.setTotalSeats(libraryDetails.getTotalSeats());
         library.setContactNumber(libraryDetails.getContactNumber());
 
-        // ✅ FIX: Update Amenities Safely (Clear + AddAll)
         if (libraryDetails.getAmenities() != null) {
             library.getAmenities().clear();
             library.getAmenities().addAll(libraryDetails.getAmenities());
         }
 
-        // ✅ FIX: Update Images Safely (Clear + AddAll)
         if (libraryDetails.getImages() != null) {
             library.getImages().clear();
             library.getImages().addAll(libraryDetails.getImages());
@@ -116,7 +131,6 @@ public class LibraryService {
         return libraryRepository.save(library);
     }
 
-    // 6. DELETE LIBRARY
     public void deleteLibrary(Long id) {
         if (!libraryRepository.existsById(id)) {
             throw new RuntimeException("Library not found with id: " + id);
@@ -124,7 +138,6 @@ public class LibraryService {
         libraryRepository.deleteById(id);
     }
 
-    // Helper
     private boolean isNumeric(String str) {
         try {
             Double.parseDouble(str);
