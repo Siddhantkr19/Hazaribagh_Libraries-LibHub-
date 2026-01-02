@@ -97,4 +97,25 @@ public class EmailService {
         message.setText(body);
         mailSender.send(message);
     }
+
+    @Async
+    public void sendBookingConfirmation(String toEmail, String libraryName, Double amount, Long bookingId) {
+        String subject = "Booking Confirmed: " + libraryName;
+
+        // You can make this HTML as fancy as you want
+        String htmlBody = "<html><body>" +
+                "<h2 style='color:green;'>Booking Successful! ✅</h2>" +
+                "<p>Hi,</p>" +
+                "<p>Your seat at <b>" + libraryName + "</b> has been successfully booked.</p>" +
+                "<div style='border:1px solid #ddd; padding:10px; border-radius:5px; background-color:#f9f9f9;'>" +
+                "<p><b>Booking ID:</b> #" + bookingId + "</p>" +
+                "<p><b>Amount Paid:</b> ₹" + amount + "</p>" +
+                "<p><b>Status:</b> <span style='color:green; font-weight:bold;'>Active</span></p>" +
+                "</div>" +
+                "<p>Thank you for choosing LibHub!</p>" +
+                "</body></html>";
+
+        // Reuse your existing sendHtmlEmail method
+        sendHtmlEmail(toEmail, subject, htmlBody);
+    }
 }

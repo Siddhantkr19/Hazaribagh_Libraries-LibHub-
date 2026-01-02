@@ -8,6 +8,7 @@ import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.service.BookingService;
 import com.razorpay.RazorpayException;
 import org.springframework.http.ResponseEntity;
+import com.HazaribaghLibraries.service.EmailService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,9 +18,11 @@ import java.util.List;
 //@CrossOrigin(origins = "http://localhost:5173")
 public class BookingController {
     private  final BookingService bookingService;
+    private final EmailService emailService;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, EmailService emailService) {
         this.bookingService = bookingService;
+        this.emailService = emailService;
     }
 
 
@@ -36,11 +39,37 @@ public class BookingController {
      }
 
     // 2. STEP TWO: Verify Payment
-    // Frontend calls this AFTER Razorpay success popup closes
+    // 2. STEP TWO: Verify Payment
     @PostMapping("/verify-payment")
     public ResponseEntity<?> verifyPayment(@RequestBody PaymentVerificationDTO verificationDTO) {
         try {
+            // 1. Verify Payment & Save to DB
             Booking confirmedBooking = bookingService.verifyPayment(verificationDTO);
+
+            // <--- START EMAIL LOGIC --->
+            try {
+                // Check if library details exist to avoid NullPointer error
+                String libName = (confirmedBooking.getLibrary() != null)
+                        ? confirmedBooking.getLibrary().getName()
+                        : "Library Seat";
+
+                // ✅ FIX: Use .getUser().getEmail() instead of .getUserEmail()
+                String userEmail = (confirmedBooking.getUser() != null)
+                        ? confirmedBooking.getUser().getEmail()
+                        : "unknown@error.com";
+
+                emailService.sendBookingConfirmation(
+                        userEmail,         // Corrected Line
+                        libName,
+                        confirmedBooking.getAmountPaid(),
+                        confirmedBooking.getId()
+                );
+            } catch (Exception e) {
+                // Log error so booking still succeeds even if email fails
+                System.err.println("Failed to send email: " + e.getMessage());
+            }
+            // <--- END EMAIL LOGIC --->
+
             return ResponseEntity.ok(confirmedBooking);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
