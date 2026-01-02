@@ -29,7 +29,7 @@ public class FileUploadController {
             // 1. Validate File Type (Images only)
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                return ResponseEntity.badRequest().body("Only JPG/PNG images are allowed");
+                return ResponseEntity.badRequest().body("Only JPG, PNG, or WebP images are allowed");
             }
 
             // 2. Upload to Cloudinary (Permanent Storage) ✅

@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/libraries/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
+                        .requestMatchers( "/api/health/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/libraries").permitAll()    // <--- ADD THIS (Exact match)
                        // <--- Catches /libraries/1
