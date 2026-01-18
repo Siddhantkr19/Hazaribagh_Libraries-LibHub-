@@ -7,6 +7,7 @@ import com.HazaribaghLibraries.repository.UserRepository;
 import com.HazaribaghLibraries.security.jwt.JwtUtils;
 import com.HazaribaghLibraries.service.AuthService;
 import com.HazaribaghLibraries.security.services.UserDetailsServiceImpl;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 //@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true") // Must set allowCredentials
+@Tag(name = "Authentication", description = "Login, Register, and Password Reset")
 public class AuthController {
 
     private final AuthService authService;

@@ -3,6 +3,7 @@ package com.HazaribaghLibraries.controller;
 import com.HazaribaghLibraries.entity.HelpTicket;
 import com.HazaribaghLibraries.repository.HelpTicketRepository;
 import com.HazaribaghLibraries.service.EmailService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/help")
 //@CrossOrigin("http://localhost:5173") // Allow your React Frontend
+@Tag(name = "Help Desk", description = "Student Support Tickets")
 public class HelpController {
 
     @Autowired

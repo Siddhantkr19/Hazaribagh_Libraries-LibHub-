@@ -76,6 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/library/**").permitAll()
                         .requestMatchers( "/api/health/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**" , "/docs", "/docs/** ").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/libraries").permitAll()    // <--- ADD THIS (Exact match)
                        // <--- Catches /libraries/1
@@ -114,7 +115,8 @@ public class SecurityConfig {
                // "https://libhub-kappa.vercel.app",
                 "https://libhub.live",            // <--- Add domain
                 "https://www.libhub.live",// Production Frontend
-                "https://libhub-6izs.onrender.com"       // Production Backend (Self)
+                "https://libhub-6izs.onrender.com",
+                "http://localhost:8080"// Production Backend (Self)
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));

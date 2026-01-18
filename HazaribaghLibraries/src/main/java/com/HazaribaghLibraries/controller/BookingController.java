@@ -7,6 +7,7 @@ import com.HazaribaghLibraries.dto.PaymentVerificationDTO;
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.service.BookingService;
 import com.razorpay.RazorpayException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import com.HazaribaghLibraries.service.EmailService;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
+@Tag(name = "Bookings", description = "Seat Reservation, Payment & Dashboard")
 //@CrossOrigin(origins = "http://localhost:5173")
 public class BookingController {
     private  final BookingService bookingService;

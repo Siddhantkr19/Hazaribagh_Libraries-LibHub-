@@ -1,6 +1,7 @@
 package com.HazaribaghLibraries.controller;
 
 import com.HazaribaghLibraries.service.PhotoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,6 +10,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/public")
+@Tag(name = "Utility", description = "Health Checks and File Uploads")
 //@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class FileUploadController {
 

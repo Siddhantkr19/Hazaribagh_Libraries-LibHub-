@@ -3,6 +3,7 @@ package com.HazaribaghLibraries.controller;
 import com.HazaribaghLibraries.dto.LibraryCardDTO;
 import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.service.LibraryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/libraries") // All URLs start with this
 // @CrossOrigin...  <-- REMOVED! We let SecurityConfig.java handle this globally now.
+@Tag(name = "Libraries", description = "Search, Filter, and View Libraries")
 public class LibraryController {
 
     private final LibraryService libraryService;

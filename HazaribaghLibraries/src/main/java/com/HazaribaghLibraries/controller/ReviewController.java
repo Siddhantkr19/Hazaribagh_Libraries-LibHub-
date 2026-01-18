@@ -3,6 +3,7 @@ package com.HazaribaghLibraries.controller;
 import com.HazaribaghLibraries.dto.ReviewRequestDTO;
 import com.HazaribaghLibraries.entity.Review;
 import com.HazaribaghLibraries.service.ReviewService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/reviews")
 //@CrossOrigin("http://localhost:5173")
+@Tag(name = "Reviews", description = "Ratings and Feedback System")
 public class ReviewController {
 
     @Autowired

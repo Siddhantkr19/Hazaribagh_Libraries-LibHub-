@@ -5,6 +5,7 @@ import com.HazaribaghLibraries.dto.UserDTO;
 import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.service.PhotoService;
 import com.HazaribaghLibraries.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,7 @@ import java.io.IOException;
 
 @RequestMapping("/api/auth") // Common standard for login/register APIs
 //@CrossOrigin(origins = "http://localhost:5173")
+@Tag(name = "Authentication")
 @RestController
 public class UserController {
     private final UserService userService;

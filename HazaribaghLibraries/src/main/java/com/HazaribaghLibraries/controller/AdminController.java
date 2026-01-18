@@ -6,6 +6,7 @@ import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.UserRepository;
 import com.HazaribaghLibraries.service.PaymentReportService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.HazaribaghLibraries.service.SchedulerService;
@@ -23,6 +24,7 @@ import com.HazaribaghLibraries.repository.LibraryRepository;
 @RestController
 @RequestMapping("/api/admin")
 //@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@Tag(name = "Admin Control", description = "Revenue Stats & Management")
 public class AdminController {
 
     private final BookingRepository bookingRepository;
