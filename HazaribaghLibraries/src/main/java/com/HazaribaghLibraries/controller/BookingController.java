@@ -8,12 +8,13 @@ import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.service.BookingService;
 import com.razorpay.RazorpayException;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import com.HazaribaghLibraries.service.EmailService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/bookings")
 @Tag(name = "Bookings", description = "Seat Reservation, Payment & Dashboard")
@@ -68,7 +69,7 @@ public class BookingController {
                 );
             } catch (Exception e) {
                 // Log error so booking still succeeds even if email fails
-                System.err.println("Failed to send email: " + e.getMessage());
+                log.error("Failed to send email:{} " , e.getMessage());
             }
             // <--- END EMAIL LOGIC --->
 

@@ -2,12 +2,13 @@ package com.HazaribaghLibraries.service;
 
 import com.HazaribaghLibraries.entity.Booking;
 import com.HazaribaghLibraries.repository.BookingRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+@Slf4j
 @Service
 public class SchedulerService {
 
@@ -23,7 +24,7 @@ public class SchedulerService {
     // Cron format: Seconds Minutes Hours DayOfMonth Month DayOfWeek
     @Scheduled(cron = "0 0 10 * * ?")
     public void sendExpiryReminders() {
-        System.out.println("--- Running Daily Expiry Check ---");
+        log.info("---⏰Running Daily Expiry Check ---");
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime threeDaysLater = now.plusDays(3);
@@ -36,6 +37,8 @@ public class SchedulerService {
             String studentName = booking.getUser().getName();
             String libraryName = booking.getLibrary().getName();
 
+            // ✅ ADD THIS LOG: Records exactly who is getting the email
+            log.info("Sending expiry reminder to student: {} for library: {}", studentEmail, libraryName);
             // Build the Email Content
             String subject = "⚠️ Urgent: Your Seat at " + libraryName + " expires soon!";
             String body = buildEmailTemplate(studentName, libraryName, booking.getValidUntil());
@@ -44,7 +47,7 @@ public class SchedulerService {
             emailService.sendHtmlEmail(studentEmail, subject, body);
         }
 
-        System.out.println("--- Finished. Sent " + expiringBookings.size() + " reminders. ---");
+        log.info("--- Finished. Sent " + expiringBookings.size() + " reminders. ---");
     }
 
     private String buildEmailTemplate(String name, String libName, LocalDateTime date) {

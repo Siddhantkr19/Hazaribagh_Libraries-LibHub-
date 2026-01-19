@@ -2,10 +2,11 @@ package com.HazaribaghLibraries.config;
 
 import com.HazaribaghLibraries.entity.User;
 import com.HazaribaghLibraries.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
+@Slf4j
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -27,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setPhoneNumber("0000000000"); // Placeholder
             admin.setRole(User.Role.Admin); // ✅ Essential for Admin access
             userRepository.save(admin);
-            System.out.println("✅ Default Admin User Created.");
+            log.info("✅ Default Admin User Created.");
         }
     }
 }

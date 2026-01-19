@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,7 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
+@Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -29,7 +30,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             // [DEBUG] Print Cookies to Console
             if (request.getCookies() != null) {
                 for (jakarta.servlet.http.Cookie c : request.getCookies()) {
-                     System.out.println("Backend received cookie: " + c.getName());
+                    // ✅ Use debug for sensitive/spammy info
+                     log.debug("Backend received cookie: {}" , c.getName());
                 }
             }
 
@@ -46,7 +48,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

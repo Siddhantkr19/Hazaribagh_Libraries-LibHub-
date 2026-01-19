@@ -4,6 +4,7 @@ import com.HazaribaghLibraries.dto.ReviewRequestDTO;
 import com.HazaribaghLibraries.entity.*;
 import com.HazaribaghLibraries.repository.*;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
+@Slf4j
 @Service
 public class ReviewService {
 
@@ -90,7 +91,7 @@ public class ReviewService {
                         library.getTotalReviews() != actualCount;
 
                 if (isOutOfSync) {
-                    System.out.println("🔄 Self-Healing triggered for Library ID " + libraryId);
+                    log.warn("🔄 Self-Healing triggered for Library ID {}", libraryId);
                     library.setAverageRating(actualAverage);
                     library.setTotalReviews(actualCount);
                     libraryRepository.save(library);
