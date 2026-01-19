@@ -1,5 +1,6 @@
 package com.HazaribaghLibraries.controller;
 
+import com.HazaribaghLibraries.dto.ApiResponse;
 import com.HazaribaghLibraries.dto.LibraryCardDTO;
 import com.HazaribaghLibraries.entity.Library;
 import com.HazaribaghLibraries.service.LibraryService;
@@ -23,22 +24,22 @@ public class LibraryController {
 
     // 1. Get All Libraries
     @GetMapping
-    public ResponseEntity<List<LibraryCardDTO>> getAllLibraries() {
-        return ResponseEntity.ok(libraryService.getAllLibraries());
+    public ResponseEntity<ApiResponse<List<LibraryCardDTO>>> getAllLibraries() {
+        return ResponseEntity.ok(new ApiResponse<>( "All libraries fetched ",libraryService.getAllLibraries()));
     }
 
     // 2. Search Libraries (Smart Search: Name OR Price)
     @GetMapping("/search")
-    public ResponseEntity<List<LibraryCardDTO>> searchLibraries(@RequestParam String query) {
-        return ResponseEntity.ok(libraryService.searchLibraries(query));
+    public ResponseEntity<ApiResponse<List<LibraryCardDTO>>> searchLibraries(@RequestParam String query) {
+        return ResponseEntity.ok(new ApiResponse<>("Search results", libraryService.searchLibraries(query)));
     }
 
     // 3. Get Single Library Details
     @GetMapping("/{id}")
-    public ResponseEntity<LibraryCardDTO> getLibraryDetails(
+    public ResponseEntity<ApiResponse<LibraryCardDTO>> getLibraryDetails(
             @PathVariable Long id,
             @RequestParam(required = false) String userEmail) {
-        return ResponseEntity.ok(libraryService.getLibraryDetails(id, userEmail));
+        return ResponseEntity.ok(new ApiResponse<>("Library details fetched", libraryService.getLibraryDetails(id, userEmail)));
     }
 
     // --- ADMIN ONLY ENDPOINTS ---
@@ -46,20 +47,20 @@ public class LibraryController {
 
     // Admin: Create
     @PostMapping
-    public ResponseEntity<Library> createLibrary(@RequestBody Library library) {
-        return ResponseEntity.ok(libraryService.createLibrary(library));
+    public ResponseEntity<ApiResponse<Library>> createLibrary(@RequestBody Library library) {
+        return ResponseEntity.ok(new ApiResponse<>("Library created", libraryService.createLibrary(library)));
     }
 
     // Admin: Update (Edit)
     @PutMapping("/{id}")
-    public ResponseEntity<Library> updateLibrary(@PathVariable Long id, @RequestBody Library library) {
-        return ResponseEntity.ok(libraryService.updateLibrary(id, library));
+    public ResponseEntity<ApiResponse<Library>> updateLibrary(@PathVariable Long id, @RequestBody Library library) {
+        return ResponseEntity.ok(new ApiResponse<>("Library updated", libraryService.updateLibrary(id, library)));
     }
 
     // Admin: Delete
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLibrary(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteLibrary(@PathVariable Long id) {
         libraryService.deleteLibrary(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>("Library deleted successfully"));
     }
 }

@@ -1,5 +1,6 @@
 package com.HazaribaghLibraries.controller;
 
+import com.HazaribaghLibraries.dto.ApiResponse; // ✅ Import
 import com.HazaribaghLibraries.entity.HelpTicket;
 import com.HazaribaghLibraries.repository.HelpTicketRepository;
 import com.HazaribaghLibraries.service.EmailService;
@@ -13,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/help")
-//@CrossOrigin("http://localhost:5173") // Allow your React Frontend
 @Tag(name = "Help Desk", description = "Student Support Tickets")
 public class HelpController {
 
@@ -22,50 +22,40 @@ public class HelpController {
     @Autowired
     private EmailService emailService;
 
-    // 1. SAVE TO DATABASE (Used by Student)
-    // URL: POST http://localhost:8080/api/help/submit
+    // 1. Submit Ticket
     @PostMapping("/submit")
-    public ResponseEntity<?> submitTicket(@RequestBody HelpTicket ticket) {
-        try {
-            // ✅ This line permanently writes the data to the DB table
-            helpTicketRepository.save(ticket);
-            return ResponseEntity.ok("Message saved successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error saving to database: " + e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<String>> submitTicket(@RequestBody HelpTicket ticket) {
+        helpTicketRepository.save(ticket);
+        return ResponseEntity.ok(new ApiResponse<>("Message saved successfully."));
     }
 
-    // 2. RETRIEVE FROM DATABASE (Used by Admin Panel)
-    // URL: GET http://localhost:8080/api/help/all
+    // 2. Get All Tickets
     @GetMapping("/all")
-    public ResponseEntity<List<HelpTicket>> getAllTickets() {
-        // ✅ Fetches all saved messages, newest first
-        return ResponseEntity.ok(helpTicketRepository.findAllByOrderByCreatedAtDesc());
+    public ResponseEntity<ApiResponse<List<HelpTicket>>> getAllTickets() {
+        return ResponseEntity.ok(new ApiResponse<>("All tickets fetched", helpTicketRepository.findAllByOrderByCreatedAtDesc()));
     }
-    // 3. REPLY TO TICKET (Sends Email)
+
+    // 3. Reply to Ticket
     @PostMapping("/reply")
-    public ResponseEntity<?> replyToTicket(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ApiResponse<String>> replyToTicket(@RequestBody Map<String, String> request) {
         String ticketId = request.get("ticketId");
         String message = request.get("message");
 
         HelpTicket ticket = helpTicketRepository.findById(Long.parseLong(ticketId))
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        // Send Email
         emailService.sendReplyEmail(ticket.getUserEmail(), ticket.getSubject(), message);
 
-        // Update Status
         ticket.setStatus("REPLIED");
         helpTicketRepository.save(ticket);
 
-        return ResponseEntity.ok("Reply sent successfully!");
+        return ResponseEntity.ok(new ApiResponse<>("Reply sent successfully!"));
     }
 
-    // 4. DELETE TICKET
+    // 4. Delete Ticket
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteTicket(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> deleteTicket(@PathVariable Long id) {
         helpTicketRepository.deleteById(id);
-        return ResponseEntity.ok("Ticket deleted successfully.");
+        return ResponseEntity.ok(new ApiResponse<>("Ticket deleted successfully."));
     }
-
 }

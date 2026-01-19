@@ -1,5 +1,6 @@
 package com.HazaribaghLibraries.controller;
 
+import com.HazaribaghLibraries.dto.ApiResponse; // ✅ Import
 import com.HazaribaghLibraries.dto.ReviewRequestDTO;
 import com.HazaribaghLibraries.entity.Review;
 import com.HazaribaghLibraries.service.ReviewService;
@@ -13,56 +14,42 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
-//@CrossOrigin("http://localhost:5173")
 @Tag(name = "Reviews", description = "Ratings and Feedback System")
 public class ReviewController {
 
     @Autowired
     private ReviewService reviewService;
 
-    // 1. CHECK ELIGIBILITY
+    // 1. Check Eligibility
     @GetMapping("/check-eligibility")
-    public ResponseEntity<Map<String, Object>> checkEligibility(@RequestParam Long bookingId) {
-        try {
-            return ResponseEntity.ok(reviewService.checkEligibility(bookingId));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkEligibility(@RequestParam Long bookingId) {
+        // Global Handler catches errors automatically
+        return ResponseEntity.ok(new ApiResponse<>("Eligibility status", reviewService.checkEligibility(bookingId)));
     }
 
-    // 2. SUBMIT REVIEW
+    // 2. Submit Review
     @PostMapping("/submit")
-    public ResponseEntity<?> submitReview(@RequestBody ReviewRequestDTO request) {
-        try {
-            reviewService.submitReview(request);
-            return ResponseEntity.ok("Review submitted successfully!");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error submitting review.");
-        }
+    public ResponseEntity<ApiResponse<String>> submitReview(@RequestBody ReviewRequestDTO request) {
+        reviewService.submitReview(request);
+        return ResponseEntity.ok(new ApiResponse<>("Review submitted successfully!"));
     }
 
-    // 3. GET PUBLIC REVIEWS
+    // 3. Get Public Reviews
     @GetMapping("/library/{libraryId}")
-    public ResponseEntity<List<Review>> getLibraryReviews(@PathVariable Long libraryId) {
-        return ResponseEntity.ok(reviewService.getPublicLibraryReviews(libraryId));
+    public ResponseEntity<ApiResponse<List<Review>>> getLibraryReviews(@PathVariable Long libraryId) {
+        return ResponseEntity.ok(new ApiResponse<>("Reviews fetched", reviewService.getPublicLibraryReviews(libraryId)));
     }
 
-    // 4. ADMIN: GET ALL REVIEWS
+    // 4. Admin: Get All Reviews
     @GetMapping("/admin/all")
-    public ResponseEntity<List<Review>> getAllReviewsForAdmin() {
-        return ResponseEntity.ok(reviewService.getAllReviewsForAdmin());
+    public ResponseEntity<ApiResponse<List<Review>>> getAllReviewsForAdmin() {
+        return ResponseEntity.ok(new ApiResponse<>("All reviews fetched", reviewService.getAllReviewsForAdmin()));
     }
 
-    // 3. Admin: Toggle Visibility (Returns Updated Object)
+    // 5. Admin: Toggle Visibility
     @PutMapping("/admin/toggle-visibility/{id}")
-    public ResponseEntity<Review> toggleVisibility(@PathVariable Long id) {
-        try {
-            Review updatedReview = reviewService.toggleVisibilityAndReturn(id);
-            return ResponseEntity.ok(updatedReview);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ApiResponse<Review>> toggleVisibility(@PathVariable Long id) {
+        Review updatedReview = reviewService.toggleVisibilityAndReturn(id);
+        return ResponseEntity.ok(new ApiResponse<>("Visibility toggled", updatedReview));
     }
 }

@@ -1,6 +1,6 @@
 package com.HazaribaghLibraries.config;
 
-import com.HazaribaghLibraries.dto.ErrorResponseDTO;
+import com.HazaribaghLibraries.dto.ApiResponse; // Import the new class
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,38 +11,45 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+// Only catch errors from YOUR package
 @RestControllerAdvice(basePackages = "com.HazaribaghLibraries")
 public class GlobalExceptionHandler {
 
-    // 1. Handle Generic Runtime Exceptions (e.g., "User not found", "Library full")
+    // 1. Handle Generic Runtime Exceptions
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponseDTO> handleRuntimeException(RuntimeException ex) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException ex) {
+        ApiResponse<Object> response = new ApiResponse<>(
+                false,
                 ex.getMessage(),
+                null,
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // 2. Handle Validation Errors (e.g., Empty Email in LoginRequestDTO)
+    // 2. Handle Validation Errors (e.g., Empty Email)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+
+        ApiResponse<Map<String, String>> response = new ApiResponse<>(
+                false, "Validation Failed", errors, LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    // 3. Handle Unexpected System Crashes (NullPointer, etc.)
+    // 3. Handle System Crashes
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Something went wrong: " + ex.getMessage(),
+    public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex) {
+        ApiResponse<Object> response = new ApiResponse<>(
+                false,
+                "Internal Server Error: " + ex.getMessage(),
+                null,
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
