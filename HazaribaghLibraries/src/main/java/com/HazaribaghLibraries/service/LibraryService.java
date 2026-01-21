@@ -9,6 +9,7 @@ import com.HazaribaghLibraries.repository.BookingRepository;
 import com.HazaribaghLibraries.repository.LibraryRepository;
 import com.HazaribaghLibraries.repository.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class LibraryService {
     }
 
     // 1. GET ALL LIBRARIES
+    @Cacheable("libraries_v2")
     public List<LibraryCardDTO> getAllLibraries() {
         List<Library> libraries = libraryRepository.findAll();
         // Use the helper method to ensure clean strings
