@@ -22,4 +22,4 @@ jobs:
         with:
           context: ./HazaribaghLibraries
           push: true
-          tags: siddhantkumar/libhub-backend:latest
+          tags: siddantkumar/libhub-backend:latest
