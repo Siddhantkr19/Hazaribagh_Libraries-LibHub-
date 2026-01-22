@@ -23,3 +23,7 @@ jobs:
           context: ./HazaribaghLibraries
           push: true
           tags: siddantkumar/libhub-backend:latest
+      - name: Trigger Render Deployment
+        run: curl "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+          
