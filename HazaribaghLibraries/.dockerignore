@@ -1,0 +1,16 @@
+# Ignore the "target" folder (because Docker builds its own fresh jar)
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Ignore git history and IDE settings
+.git
+.idea
+*.iml
+.DS_Store
+
+# Ignore local logs and help files
+HELP.md
+logs/
+*.log
