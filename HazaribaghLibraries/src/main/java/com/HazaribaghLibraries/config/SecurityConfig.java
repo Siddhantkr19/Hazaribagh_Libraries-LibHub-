@@ -115,7 +115,7 @@ public class SecurityConfig {
                // "https://libhub-kappa.vercel.app",
                 "https://libhub.live",            // <--- Add domain
                 "https://www.libhub.live",// Production Frontend
-                "https://libhub-6izs.onrender.com",
+                "https://libhub-backend.onrender.com",
                 "http://localhost:8080"// Production Backend (Self)
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));

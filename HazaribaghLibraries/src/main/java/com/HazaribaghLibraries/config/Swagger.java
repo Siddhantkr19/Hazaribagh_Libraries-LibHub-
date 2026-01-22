@@ -26,7 +26,7 @@ public class Swagger {
                 .description("Local Development Server");
 
         Server productionServer = new Server()
-                .url("https://libhub-6izs.onrender.com") // ✅ Updated to your actual Render URL
+                .url("https://libhub-backend.onrender.com") // ✅ Updated to your actual Render URL
                 .description("Production Server (Live)");
 
         return new OpenAPI()
