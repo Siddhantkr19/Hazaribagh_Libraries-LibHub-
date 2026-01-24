@@ -1,0 +1,20 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    # Run every 14 minutes
+    # ONLY between 02:00 UTC (7:30 AM IST) and 17:00 UTC (10:30 PM IST)
+    - cron: '*/13 2-17 * * *'
+  
+  # Allows you to run this manually from the Actions tab for testing
+  workflow_dispatch:
+
+jobs:
+  ping_render:
+    name: Ping Health Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake up Render
+        # We use --max-time 300 to wait 5 minutes. 
+        # This prevents the "Timeout" error you saw on cron-job.org
+        run: curl --max-time 300 https://libhub-backend.onrender.com/api/health
