@@ -4,7 +4,7 @@ on:
   schedule:
     # Run every 14 minutes
     # ONLY between 02:00 UTC (7:30 AM IST) and 17:00 UTC (10:30 PM IST)
-    - cron: '*/13 2-17 * * *'
+    - cron: '*/13 * * * *'
   
   # Allows you to run this manually from the Actions tab for testing
   workflow_dispatch:
