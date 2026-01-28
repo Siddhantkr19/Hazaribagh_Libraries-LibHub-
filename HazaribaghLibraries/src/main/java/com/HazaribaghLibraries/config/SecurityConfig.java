@@ -107,24 +107,24 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",                 // Localhost
-               // "https://libhub-kappa.vercel.app",
-                "https://libhub.live",            // <--- Add domain
-                "https://www.libhub.live",// Production Frontend
-                "https://libhub-backend.onrender.com",
-                "http://localhost:8080"// Production Backend (Self)
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setAllowCredentials(true); // CRITICAL for Cookies
-        configuration.setMaxAge(3600L);
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173",                 // Localhost
+            // "https://libhub-kappa.vercel.app",
+            "https://libhub.live",            // <--- Add domain
+            "https://www.libhub.live",// Production Frontend
+            "https://libhub-backend.onrender.com",
+            "http://localhost:8080"// Production Backend (Self)
+    ));
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+    configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+    configuration.setAllowCredentials(true); // CRITICAL for Cookies
+    configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+}
 }

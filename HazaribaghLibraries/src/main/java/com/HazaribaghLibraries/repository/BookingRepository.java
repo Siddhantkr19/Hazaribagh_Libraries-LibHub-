@@ -12,14 +12,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Repository // ✅ CORRECT ANNOTATION
+@Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByUser(User user);
 
-    List<Booking> findByUser(User user);
+    @Query("SELECT b FROM Booking b WHERE b.user = :user ORDER BY b.bookingDate DESC")
+    List<Booking> findByUser(@Param("user") User user);
 
-    List<Booking> findByUserAndStatus(User user, Booking.BookingStatus status);
+
+    @Query("SELECT b FROM Booking b WHERE b.user = :user AND b.status = :status ORDER BY b.bookingDate DESC")
+    List<Booking> findByUserAndStatus(@Param("user") User user, @Param("status") Booking.BookingStatus status);
 
     Optional<Booking> findTopByUserAndLibraryAndStatusOrderByValidUntilDesc(
             User user,

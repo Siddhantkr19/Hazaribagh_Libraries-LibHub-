@@ -13,8 +13,9 @@ public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, 
     // 1. Fetch history for a specific user in a specific library
     List<PaymentHistory> findByUserAndLibraryOrderByPaymentDateDesc(User user, Library library);
 
-    // 2. [OPTIMIZED] Fetch ALL history for a library using just the ID
-    // This is faster because we don't need to fetch the full Library object first
+
+    List<PaymentHistory> findByUserOrderByPaymentDateDesc(User user);
+
     List<PaymentHistory> findByLibraryIdOrderByPaymentDateDesc(Long libraryId);
 
     // --- NEW METHODS TO SOLVE N+1 PROBLEM ---
