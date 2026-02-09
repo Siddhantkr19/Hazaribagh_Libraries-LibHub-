@@ -47,6 +47,12 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminStatsDTO>> getDashboardStats() {
         AdminStatsDTO stats = new AdminStatsDTO();
         Double revenue = bookingRepository.calculateTotalRevenue();
+        // ✅ Round to 2 decimal places
+        if (revenue != null) {
+            revenue = Math.round(revenue * 100.0) / 100.0;
+        } else {
+            revenue = 0.0;
+        }
         stats.setTotalRevenue(revenue != null ? revenue : 0.0);
         stats.setActiveSeats(bookingRepository.countActiveSeats());
         stats.setTotalUsers(userRepository.count());
